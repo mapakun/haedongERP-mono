@@ -1,0 +1,29 @@
+### 1. 로그인 전 내 정보 조회 → 401 이어야 함
+GET http://localhost:8080/api/auth/me
+
+### 2. 틀린 비밀번호 → 401 + 메시지
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "loginId": "아이디",
+  "password": "wrong-password"
+}
+
+### 3. 로그인 성공 → 200 + 사용자 정보
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "loginId": "아이디",
+  "password": "실제비밀번호"
+}
+
+### 4. 로그인 후 내 정보 조회 → 200
+GET http://localhost:8080/api/auth/me
+
+### 5. 로그아웃 → 200
+POST http://localhost:8080/api/auth/logout
+
+### 6. 로그아웃 후 내 정보 조회 → 다시 401
+GET http://localhost:8080/api/auth/me

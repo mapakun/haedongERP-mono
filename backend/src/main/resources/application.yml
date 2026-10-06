@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: haedong-erp
+
+  # backend/.env 파일의 값을 설정으로 읽어온다 (파일이 없으면 무시)
+  config:
+    import: optional:file:.env[.properties]
+
+  # 앱이 사용하는 접속 정보 → app_user (DML만 가능)
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_APP_USERNAME}
+    password: ${DB_APP_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+
+  # 테이블 생성·변경은 Flyway가 담당 → dev_user (DDL 가능)
+  flyway:
+    enabled: false
+    user: ${DB_DEV_USERNAME}
+    password: ${DB_DEV_PASSWORD}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    com.haedong.erp: debug
+
+server:
+  servlet:
+    session:
+      timeout: 30m #30분 뒤 자동 로그아웃
+      cookie:
+        http-only: true # 세션쿠기 읽지 못하게 방지
+        same-site: strict # CSRF 1차 방어
