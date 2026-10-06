@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export const mainRoutes: RouteRecordRaw[] = [
   {
-    path: '/',
+    path: '',
     name: 'main',
     component: () => import('./MainView.vue'),
   },
