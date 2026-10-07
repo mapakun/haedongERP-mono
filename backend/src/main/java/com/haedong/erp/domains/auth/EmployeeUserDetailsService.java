@@ -1,7 +1,7 @@
-package com.haedong.erp.auth;
+package com.haedong.erp.domains.auth;
 
-import com.haedong.erp.employee.Employee;
-import com.haedong.erp.employee.EmployeeMapper;
+import com.haedong.erp.domains.employee.Employee;
+import com.haedong.erp.domains.employee.EmployeeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

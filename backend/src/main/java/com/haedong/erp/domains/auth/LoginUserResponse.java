@@ -1,6 +1,6 @@
-package com.haedong.erp.auth;
+package com.haedong.erp.domains.auth;
 
-import com.haedong.erp.employee.Role;
+import com.haedong.erp.domains.employee.Role;
 
 public record LoginUserResponse(
         Long id,

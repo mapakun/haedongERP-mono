@@ -1,7 +1,7 @@
-package com.haedong.erp.auth;
+package com.haedong.erp.domains.auth;
 
-import com.haedong.erp.employee.Employee;
-import com.haedong.erp.employee.Role;
+import com.haedong.erp.domains.employee.Employee;
+import com.haedong.erp.domains.employee.Role;
 import lombok.Getter;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;

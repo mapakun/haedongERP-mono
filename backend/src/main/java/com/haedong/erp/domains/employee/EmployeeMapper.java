@@ -1,4 +1,4 @@
-package com.haedong.erp.employee;
+package com.haedong.erp.domains.employee;
 
 import org.apache.ibatis.annotations.Mapper;
 

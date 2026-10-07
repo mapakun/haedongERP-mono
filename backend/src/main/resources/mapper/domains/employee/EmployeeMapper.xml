@@ -2,14 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.haedong.erp.employee.EmployeeMapper">
+<mapper namespace="com.haedong.erp.domains.employee.EmployeeMapper">
 
     <sql id="employeeColumns">
         id, name, job_type, login_id, password, role, enabled,
         last_login_at, created_at, updated_at
     </sql>
 
-    <select id="findByLoginId" resultType="com.haedong.erp.employee.Employee">
+    <select id="findByLoginId" resultType="com.haedong.erp.domains.employee.Employee">
         SELECT <include refid="employeeColumns"/>
         FROM hd_employee
         WHERE login_id = #{loginId}
