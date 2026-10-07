@@ -21,4 +21,39 @@
         WHERE id = #{id}
     </update>
 
+    <sql id="searchCondition">
+        <where>
+            <if test="keyword != null">
+                AND (e.name LIKE '%' || #{keyword} || '%'
+                OR e.mobile LIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="jobType != null">
+                AND e.job_type = #{jobType}
+            </if>
+        </where>
+    </sql>
+
+    <select id="search" resultType="com.haedong.erp.domains.employee.EmployeeSummaryResponse">
+        SELECT e.id,
+        e.name,
+        e.job_type,
+        e.birth_date,
+        e.mobile,
+        d.seniority_no,
+        e.role,
+        e.enabled,
+        e.login_id IS NOT NULL AS has_account
+        FROM hd_employee e
+        LEFT JOIN hd_driver d ON d.employee_name = e.name
+        <include refid="searchCondition"/>
+        ORDER BY d.seniority_no NULLS LAST, e.name
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*)
+        FROM hd_employee e
+        <include refid="searchCondition"/>
+    </select>
+
 </mapper>
