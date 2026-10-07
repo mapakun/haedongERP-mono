@@ -3,6 +3,7 @@ import { useAuthStore } from '@/domains/auth/auth.store'
 import { authRoutes } from '@/domains/auth/auth.routes'
 import { mainRoutes } from '@/domains/main/main.routes'
 import AppLayout from '@/layout/AppLayout.vue'
+import { employeeRoutes } from '@/domains/employee/employee.routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,7 +11,7 @@ const router = createRouter({
     {
       path: '/',
       component: AppLayout,
-      children: [...mainRoutes],
+      children: [...mainRoutes, ...employeeRoutes],
     },
     ],
 })
