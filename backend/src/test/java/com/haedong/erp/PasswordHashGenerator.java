@@ -13,6 +13,6 @@ public class PasswordHashGenerator {
     @Test
     void generate() {
         PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
-        System.out.println(encoder.encode("생성비밀번호"));
+        System.out.println(encoder.encode("1234"));
     }
 }
