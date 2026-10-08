@@ -17,6 +17,7 @@ export interface EmployeeSummary {
   role: Role
   enabled: boolean
   hasAccount: boolean
+  retiredAt: string | null
 }
 
 export interface EmployeeSearchParams {
@@ -24,6 +25,7 @@ export interface EmployeeSearchParams {
   jobType?: JobType
   page?: number
   size?: number
+  includeRetired?: boolean
 }
 
 export type EmployeeDetail = EmployeeSummary
@@ -33,5 +35,12 @@ export interface EmployeeSaveRequest {
   jobType: JobType
   birthDate: string | null
   mobile: string | null
+  seniorityNo: number | null
+}
+
+/** 퇴사 확인창에 넘기는 대상 직원 정보 */
+export interface RetireTarget {
+  id: number
+  name: string
   seniorityNo: number | null
 }

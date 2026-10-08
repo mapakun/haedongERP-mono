@@ -15,6 +15,7 @@ public class EmployeeSearchRequest {
     private JobType jobType;
     private Integer page;
     private Integer size;
+    private boolean includeRetired;
 
     public int getPage() {
         return page == null || page < 1 ? 1 : page;

@@ -14,8 +14,9 @@ public class Employee {
     private Long id;
     private String name;
     private JobType jobType;
-    private LocalDate birthDate;    // 추가
-    private String mobile;          // 추가
+    private LocalDate birthDate;
+    private String mobile;
+    private LocalDate retiredAt;
     private String loginId;
     private String password;
     private Role role;
@@ -32,6 +33,20 @@ public class Employee {
 
     public void update(EmployeeSaveRequest request) {
         apply(request);
+    }
+
+    public boolean isRetired() {
+        return retiredAt != null;
+    }
+
+    public void retire(LocalDate retiredAt) {
+        this.retiredAt = retiredAt;
+        this.enabled = false;
+    }
+
+    public void cancelRetirement() {
+        this.retiredAt = null;
+        this.enabled = true;
     }
 
     private void apply(EmployeeSaveRequest request) {

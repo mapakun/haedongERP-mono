@@ -81,4 +81,14 @@ class EmployeeControllerSecurityTest {
         mockMvc.perform(post("/api/employees").contentType(APPLICATION_JSON).content(BODY))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void 일반_사용자는_퇴사_처리_403() throws Exception {
+        mockMvc.perform(post("/api/employees/1/retire").with(csrf())
+                        .contentType(APPLICATION_JSON).content("""
+                                {"retiredAt": "2026-01-01"}
+                                """))
+                .andExpect(status().isForbidden());
+    }
 }

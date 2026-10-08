@@ -39,4 +39,8 @@ public interface EmployeeMapper {
     void renameDriver(@Param("oldName") String oldName, @Param("newName") String newName);
 
     void deleteDriver(String employeeName);
+
+    void updateRetirement(Employee employee);
+
+    void clearSeniority(String employeeName);
 }

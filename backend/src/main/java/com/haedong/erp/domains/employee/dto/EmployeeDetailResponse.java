@@ -16,6 +16,7 @@ public class EmployeeDetailResponse {
     private JobType jobType;
     private LocalDate birthDate;
     private String mobile;
+    private LocalDate retiredAt;
     private Integer seniorityNo;
     private Role role;
     private boolean enabled;

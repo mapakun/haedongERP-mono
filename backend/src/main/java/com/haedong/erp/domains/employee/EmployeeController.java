@@ -1,13 +1,16 @@
 package com.haedong.erp.domains.employee;
 
 import com.haedong.erp.common.PageResponse;
+import com.haedong.erp.domains.auth.LoginUser;
 import com.haedong.erp.domains.employee.dto.EmployeeDetailResponse;
+import com.haedong.erp.domains.employee.dto.EmployeeRetireRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSaveRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSearchRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSummaryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -38,5 +41,17 @@ public class EmployeeController {
     @PutMapping("/{id}")
     public void update(@PathVariable Long id, @Valid @RequestBody EmployeeSaveRequest request) {
         employeeService.update(id, request);
+    }
+
+    @PostMapping("/{id}/retire")
+    public void retire(@PathVariable Long id,
+                       @Valid @RequestBody EmployeeRetireRequest request,
+                       @AuthenticationPrincipal LoginUser loginUser) {
+        employeeService.retire(id, request, loginUser.getId());
+    }
+
+    @PostMapping("/{id}/cancel-retirement")
+    public void cancelRetirement(@PathVariable Long id) {
+        employeeService.cancelRetirement(id);
     }
 }

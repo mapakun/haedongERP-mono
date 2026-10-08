@@ -3,6 +3,7 @@ package com.haedong.erp.domains.employee;
 import com.haedong.erp.common.BusinessException;
 import com.haedong.erp.common.PageResponse;
 import com.haedong.erp.domains.employee.dto.EmployeeDetailResponse;
+import com.haedong.erp.domains.employee.dto.EmployeeRetireRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSaveRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSearchRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSummaryResponse;
@@ -45,10 +46,12 @@ public class EmployeeService {
 
     @Transactional
     public void update(Long id, EmployeeSaveRequest request) {
-        Employee employee = employeeMapper.findById(id)
-                .orElseThrow(EmployeeService::notFound);
+        Employee employee = findEmployee(id);
         String oldName = employee.getName();
 
+        if (employee.isRetired() && request.getSeniorityNo() != null) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "퇴사한 직원은 서열을 입력할 수 없습니다.");
+        }
         validate(request, id, oldName);
 
         employee.update(request);
@@ -58,6 +61,34 @@ public class EmployeeService {
             employeeMapper.renameDriver(oldName, employee.getName());
         }
         saveDriverInfo(employee.getName(), request);
+    }
+
+    @Transactional
+    public void retire(Long id, EmployeeRetireRequest request, Long currentUserId) {
+        Employee employee = findEmployee(id);
+
+        if (employee.getId().equals(currentUserId)) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "본인은 퇴사 처리할 수 없습니다.");
+        }
+        if (employee.isRetired()) {
+            throw new BusinessException(HttpStatus.CONFLICT, "이미 퇴사 처리된 직원입니다.");
+        }
+
+        employee.retire(request.retiredAt());
+        employeeMapper.updateRetirement(employee);
+        employeeMapper.clearSeniority(employee.getName());
+    }
+
+    @Transactional
+    public void cancelRetirement(Long id) {
+        Employee employee = findEmployee(id);
+
+        if (!employee.isRetired()) {
+            throw new BusinessException(HttpStatus.CONFLICT, "퇴사 상태가 아닌 직원입니다.");
+        }
+
+        employee.cancelRetirement();
+        employeeMapper.updateRetirement(employee);
     }
 
     private void validate(EmployeeSaveRequest request, Long excludeId, String excludeDriverName) {
@@ -80,6 +111,11 @@ public class EmployeeService {
         } else {
             employeeMapper.deleteDriver(name);
         }
+    }
+
+    private Employee findEmployee(Long id) {
+        return employeeMapper.findById(id)
+                .orElseThrow(EmployeeService::notFound);
     }
 
     private static BusinessException notFound() {

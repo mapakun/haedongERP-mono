@@ -5,7 +5,7 @@
 <mapper namespace="com.haedong.erp.domains.employee.EmployeeMapper">
 
     <sql id="employeeColumns">
-        id, name, job_type, birth_date, mobile, login_id, password, role, enabled,
+        id, name, job_type, birth_date, mobile, retired_at, login_id, password, role, enabled,
         last_login_at, created_at, updated_at
     </sql>
 
@@ -30,6 +30,9 @@
             <if test="jobType != null">
                 AND e.job_type = #{jobType}
             </if>
+            <if test="!includeRetired">
+                AND e.retired_at IS NULL
+            </if>
         </where>
     </sql>
 
@@ -39,6 +42,7 @@
         e.job_type,
         e.birth_date,
         e.mobile,
+        e.retired_at,
         d.seniority_no,
         e.role,
         e.enabled,
@@ -69,6 +73,7 @@
         e.job_type,
         e.birth_date,
         e.mobile,
+        e.retired_at,
         d.seniority_no,
         e.role,
         e.enabled,
@@ -135,5 +140,21 @@
         DELETE FROM hd_driver
         WHERE employee_name = #{employeeName}
     </delete>
+
+    <!-- 퇴사 / 퇴사 취소 -->
+    <update id="updateRetirement">
+        UPDATE hd_employee
+        SET retired_at = #{retiredAt},
+        enabled    = #{enabled},
+        updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="clearSeniority">
+        UPDATE hd_driver
+        SET seniority_no = NULL,
+        updated_at   = now()
+        WHERE employee_name = #{employeeName}
+    </update>
 
 </mapper>

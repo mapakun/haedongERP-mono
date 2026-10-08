@@ -5,24 +5,31 @@ import type { PageResponse } from '@/shared/api/page'
 import { formatMobile } from '@/shared/utils/format'
 import { useAuthStore } from '@/domains/auth/auth.store'
 import EmployeeFormModal from './EmployeeFormModal.vue'
+import EmployeeRetireModal from './EmployeeRetireModal.vue'
 import { searchEmployees } from './employee.api'
-import { jobTypeLabel, type EmployeeSummary, type JobType } from './employee.types'
+import {
+  jobTypeLabel,
+  type EmployeeSummary,
+  type JobType,
+  type RetireTarget,
+} from './employee.types'
 
 const PAGE_SIZE = 20
 
 const auth = useAuthStore()
 
-const condition = reactive<{ keyword: string; jobType: JobType | '' }>({
+const condition = reactive<{ keyword: string; jobType: JobType | ''; includeRetired: boolean }>({
   keyword: '',
   jobType: '',
+  includeRetired: false, // ★ 기본은 퇴사자 제외
 })
 const result = ref<PageResponse<EmployeeSummary> | null>(null)
 const loading = ref(false)
 const errorMessage = ref('')
 
-// ★ 모달 상태
 const modalOpen = ref(false)
 const editingId = ref<number | null>(null)
+const retireTarget = ref<RetireTarget | null>(null) // ★ 퇴사 확인창 대상
 
 async function load(page: number) {
   loading.value = true
@@ -31,6 +38,7 @@ async function load(page: number) {
     result.value = await searchEmployees({
       keyword: condition.keyword || undefined,
       jobType: condition.jobType || undefined,
+      includeRetired: condition.includeRetired || undefined, // ★
       page,
       size: PAGE_SIZE,
     })
@@ -45,7 +53,10 @@ function onSearch() {
   load(1)
 }
 
-// ★ 등록 / 수정 / 저장 완료
+function reloadCurrentPage() {
+  load(result.value?.page ?? 1)
+}
+
 function openCreate() {
   editingId.value = null
   modalOpen.value = true
@@ -61,7 +72,18 @@ function openEdit(id: number) {
 
 function onSaved() {
   modalOpen.value = false
-  load(result.value?.page ?? 1)
+  reloadCurrentPage()
+}
+
+// ★ 수정 모달에서 "퇴사 처리"를 누르면: 수정 모달을 닫고 퇴사 확인창을 연다
+function onRetireRequest(target: RetireTarget) {
+  modalOpen.value = false
+  retireTarget.value = target
+}
+
+function onRetired() {
+  retireTarget.value = null
+  reloadCurrentPage()
 }
 
 onMounted(() => {
@@ -71,7 +93,6 @@ onMounted(() => {
 
 <template>
   <section>
-    <!-- ★ 제목 + 등록 버튼 -->
     <div class="page-header">
       <h2 class="title">직원 관리</h2>
       <button v-if="auth.isAdmin" type="button" class="btn btn-primary" @click="openCreate">
@@ -86,6 +107,11 @@ onMounted(() => {
         <option value="DRIVER">기사</option>
         <option value="OFFICE">사무</option>
       </select>
+      <!-- ★ 퇴사자 포함: 체크를 바꾸면 바로 다시 조회 -->
+      <label class="checkbox">
+        <input v-model="condition.includeRetired" type="checkbox" @change="onSearch" />
+        퇴사자 포함
+      </label>
       <button type="submit" class="btn btn-primary" :disabled="loading">조회</button>
     </form>
 
@@ -103,14 +129,14 @@ onMounted(() => {
           <th>생년월일</th>
           <th>휴대폰</th>
           <th>계정</th>
+          <th>상태</th>
         </tr>
         </thead>
         <tbody>
-        <!-- ★ 관리자면 행 클릭으로 수정 -->
         <tr
           v-for="employee in result.items"
           :key="employee.id"
-          :class="{ clickable: auth.isAdmin }"
+          :class="{ clickable: auth.isAdmin, retired: employee.retiredAt }"
           @click="openEdit(employee.id)"
         >
           <td class="center">{{ employee.seniorityNo ?? '-' }}</td>
@@ -119,9 +145,13 @@ onMounted(() => {
           <td class="center">{{ employee.birthDate ?? '-' }}</td>
           <td class="center">{{ formatMobile(employee.mobile) }}</td>
           <td class="center">{{ employee.hasAccount ? '있음' : '-' }}</td>
+          <!-- ★ 상태 -->
+          <td class="center">
+            {{ employee.retiredAt ? `퇴사 (${employee.retiredAt})` : '재직' }}
+          </td>
         </tr>
         <tr v-if="result.items.length === 0">
-          <td colspan="6" class="empty">조회 결과가 없습니다.</td>
+          <td colspan="7" class="empty">조회 결과가 없습니다.</td>
         </tr>
         </tbody>
       </table>
@@ -134,12 +164,19 @@ onMounted(() => {
       />
     </template>
 
-    <!-- ★ 등록·수정 모달 -->
     <EmployeeFormModal
       :open="modalOpen"
       :employee-id="editingId"
       @close="modalOpen = false"
       @saved="onSaved"
+      @retire="onRetireRequest"
+    />
+
+    <!-- ★ 퇴사 확인창 -->
+    <EmployeeRetireModal
+      :target="retireTarget"
+      @close="retireTarget = null"
+      @retired="onRetired"
     />
   </section>
 </template>
@@ -156,18 +193,25 @@ onMounted(() => {
 }
 .search-bar {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-bottom: 16px;
 }
-.search-bar input,
+.search-bar input[type='text'],
 .search-bar select {
   padding: 8px 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
 }
-.search-bar input {
+.search-bar input[type='text'] {
   width: 240px;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
 }
 .summary {
   margin: 0 0 8px;
@@ -197,6 +241,9 @@ onMounted(() => {
 }
 .clickable {
   cursor: pointer;
+}
+.retired {
+  color: var(--color-text-muted);
 }
 .center {
   text-align: center;

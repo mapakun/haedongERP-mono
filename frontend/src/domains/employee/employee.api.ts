@@ -27,3 +27,11 @@ export async function createEmployee(request: EmployeeSaveRequest): Promise<numb
 export async function updateEmployee(id: number, request: EmployeeSaveRequest): Promise<void> {
   await http.put(`/employees/${id}`, request)
 }
+
+export async function retireEmployee(id: number, retiredAt: string): Promise<void> {
+  await http.post(`/employees/${id}/retire`, { retiredAt })
+}
+
+export async function cancelRetirement(id: number): Promise<void> {
+  await http.post(`/employees/${id}/cancel-retirement`)
+}
