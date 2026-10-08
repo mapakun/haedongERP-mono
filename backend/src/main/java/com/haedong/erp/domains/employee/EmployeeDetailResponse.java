@@ -1,0 +1,21 @@
+package com.haedong.erp.domains.employee;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+
+@Getter
+@NoArgsConstructor
+public class EmployeeDetailResponse {
+
+    private Long id;
+    private String name;
+    private JobType jobType;
+    private LocalDate birthDate;
+    private String mobile;
+    private Integer seniorityNo;
+    private Role role;
+    private boolean enabled;
+    private boolean hasAccount;
+}

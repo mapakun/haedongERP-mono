@@ -5,7 +5,7 @@
 <mapper namespace="com.haedong.erp.domains.employee.EmployeeMapper">
 
     <sql id="employeeColumns">
-        id, name, job_type, login_id, password, role, enabled,
+        id, name, job_type, birth_date, mobile, login_id, password, role, enabled,
         last_login_at, created_at, updated_at
     </sql>
 
@@ -55,5 +55,85 @@
         FROM hd_employee e
         <include refid="searchCondition"/>
     </select>
+
+    <!-- 상세 / 수정용 조회 -->
+    <select id="findById" resultType="com.haedong.erp.domains.employee.Employee">
+        SELECT <include refid="employeeColumns"/>
+        FROM hd_employee
+        WHERE id = #{id}
+    </select>
+
+    <select id="findDetailById" resultType="com.haedong.erp.domains.employee.EmployeeDetailResponse">
+        SELECT e.id,
+        e.name,
+        e.job_type,
+        e.birth_date,
+        e.mobile,
+        d.seniority_no,
+        e.role,
+        e.enabled,
+        e.login_id IS NOT NULL AS has_account
+        FROM hd_employee e
+        LEFT JOIN hd_driver d ON d.employee_name = e.name
+        WHERE e.id = #{id}
+    </select>
+
+    <!-- 중복 검사 -->
+    <select id="existsByName" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM hd_employee
+        WHERE name = #{name}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+        )
+    </select>
+
+    <select id="existsBySeniorityNo" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM hd_driver
+        WHERE seniority_no = #{seniorityNo}
+        <if test="excludeName != null">
+            AND employee_name != #{excludeName}
+        </if>
+        )
+    </select>
+
+    <!-- 직원 저장 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO hd_employee (name, job_type, birth_date, mobile)
+        VALUES (#{name}, #{jobType}, #{birthDate}, #{mobile})
+    </insert>
+
+    <update id="update">
+        UPDATE hd_employee
+        SET name       = #{name},
+        job_type   = #{jobType},
+        birth_date = #{birthDate},
+        mobile     = #{mobile},
+        updated_at = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 기사 정보 -->
+    <insert id="upsertDriver">
+        INSERT INTO hd_driver (employee_name, seniority_no)
+        VALUES (#{employeeName}, #{seniorityNo})
+        ON CONFLICT (employee_name)
+        DO UPDATE SET seniority_no = EXCLUDED.seniority_no,
+        updated_at   = now()
+    </insert>
+
+    <update id="renameDriver">
+        UPDATE hd_driver
+        SET employee_name = #{newName},
+        updated_at    = now()
+        WHERE employee_name = #{oldName}
+    </update>
+
+    <delete id="deleteDriver">
+        DELETE FROM hd_driver
+        WHERE employee_name = #{employeeName}
+    </delete>
 
 </mapper>
