@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const checked = ref(false)
 
   const isLoggedIn = computed(() => user.value !== null)
+  const isAdmin = computed(() => user.value?.role === 'ADMIN')
 
   async function loadMe() {
     try {
@@ -32,5 +33,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, checked, isLoggedIn, loadMe, login, logout }
+  return { user, checked, isLoggedIn, isAdmin, loadMe, login, logout }
 })

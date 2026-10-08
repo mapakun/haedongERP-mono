@@ -25,3 +25,13 @@ export interface EmployeeSearchParams {
   page?: number
   size?: number
 }
+
+export type EmployeeDetail = EmployeeSummary
+
+export interface EmployeeSaveRequest {
+  name: string
+  jobType: JobType
+  birthDate: string | null
+  mobile: string | null
+  seniorityNo: number | null
+}
