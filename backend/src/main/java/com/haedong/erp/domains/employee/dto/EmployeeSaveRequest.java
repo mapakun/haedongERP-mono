@@ -1,5 +1,6 @@
-package com.haedong.erp.domains.employee;
+package com.haedong.erp.domains.employee.dto;
 
+import com.haedong.erp.domains.employee.JobType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;

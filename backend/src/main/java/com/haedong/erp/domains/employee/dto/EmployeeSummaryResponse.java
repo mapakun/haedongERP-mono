@@ -1,5 +1,7 @@
-package com.haedong.erp.domains.employee;
+package com.haedong.erp.domains.employee.dto;
 
+import com.haedong.erp.domains.employee.JobType;
+import com.haedong.erp.domains.employee.Role;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

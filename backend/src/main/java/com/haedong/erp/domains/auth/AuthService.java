@@ -1,5 +1,6 @@
 package com.haedong.erp.domains.auth;
 
+import com.haedong.erp.domains.auth.dto.LoginRequest;
 import com.haedong.erp.domains.employee.EmployeeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

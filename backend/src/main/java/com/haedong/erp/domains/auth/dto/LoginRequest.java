@@ -1,4 +1,4 @@
-package com.haedong.erp.domains.auth;
+package com.haedong.erp.domains.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

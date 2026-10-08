@@ -1,5 +1,6 @@
-package com.haedong.erp.domains.auth;
+package com.haedong.erp.domains.auth.dto;
 
+import com.haedong.erp.domains.auth.LoginUser;
 import com.haedong.erp.domains.employee.Role;
 
 public record LoginUserResponse(
