@@ -161,6 +161,7 @@ onMounted(() => {
         @close="modalOpen = false"
         @saved="onSaved"
         @retire="onRetireRequest"
+        @account-changed="reloadCurrentPage"
       />
       <EmployeeRetireModal
         :target="retireTarget"

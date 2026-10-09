@@ -6,3 +6,15 @@ export function todayString(): string {
   const day = String(now.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+/** '2026-10-09T13:20:00+09:00' → '13:20' */
+export function formatTime(value: string | null): string {
+  if (!value) {
+    return '-'
+  }
+  return new Date(value).toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}

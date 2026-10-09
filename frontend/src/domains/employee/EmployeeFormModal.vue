@@ -6,6 +6,7 @@ import { formatMobile } from '@/shared/utils/format'
 import { useAuthStore } from '@/domains/auth/auth.store'
 import { cancelRetirement, createEmployee, getEmployee, updateEmployee } from './employee.api'
 import type { EmployeeDetail, EmployeeSaveRequest, JobType, RetireTarget } from './employee.types'
+import EmployeeAccountSection from './EmployeeAccountSection.vue'
 
 const props = defineProps<{
   open: boolean
@@ -15,7 +16,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   saved: []
-  retire: [target: RetireTarget] // ★ 퇴사 처리 요청
+  retire: [target: RetireTarget]
+  accountChanged: []
 }>()
 
 const auth = useAuthStore()
@@ -139,6 +141,19 @@ async function onCancelRetirement() {
     saving.value = false
   }
 }
+
+/** 계정이 바뀌면 상세 정보만 다시 불러온다. 직원 정보 폼에 입력 중인 값은 건드리지 않는다 */
+async function refreshLoaded() {
+  if (props.employeeId === null) {
+    return
+  }
+  try {
+    loaded.value = await getEmployee(props.employeeId)
+  } catch (error) {
+    errorMessage.value = getErrorMessage(error, '직원 정보를 다시 불러오지 못했습니다.')
+  }
+  emit('accountChanged')
+}
 </script>
 
 <template>
@@ -208,6 +223,8 @@ async function onCancelRetirement() {
           </button>
         </div>
       </section>
+      <!-- 계정 관리 (수정일 때만) -->
+      <EmployeeAccountSection v-if="loaded" :employee="loaded" @changed="refreshLoaded" />
     </template>
 
     <template #footer>

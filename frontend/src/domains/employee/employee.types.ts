@@ -36,7 +36,11 @@ export interface EmployeeSearchParams {
   includeRetired?: boolean
 }
 
-export type EmployeeDetail = EmployeeSummary
+/** 상세 응답 = 목록 항목 + 잠금 정보 (백엔드 EmployeeDetailResponse) */
+export interface EmployeeDetail extends EmployeeSummary {
+  locked: boolean
+  lockedUntil: string | null
+}
 
 export interface EmployeeSaveRequest {
   name: string
@@ -51,4 +55,9 @@ export interface RetireTarget {
   id: number
   name: string
   seniorityNo: number | null
+}
+
+export interface AccountIssueRequest {
+  password: string
+  role: Role
 }
