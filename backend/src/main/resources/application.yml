@@ -39,6 +39,8 @@ logging:
     com.haedong.erp: debug
 
 server:
+  error:
+    include-stacktrace: never # 에러 응답에 서버 내부 코드 경로를 노출하지 않음
   servlet:
     session:
       timeout: 30m #30분 뒤 자동 로그아웃
