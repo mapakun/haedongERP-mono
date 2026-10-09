@@ -174,7 +174,7 @@ function cancelPasswordReset() {
             type="password"
             class="input min-w-0 flex-1"
             autocomplete="new-password"
-            minlength="8"
+            minlength="4"
             required
             placeholder="새 비밀번호 (4자 이상)"
           />

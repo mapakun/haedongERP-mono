@@ -9,7 +9,7 @@ public record MyPasswordChangeRequest(
         String currentPassword,
 
         @NotBlank(message = "새 비밀번호를 입력해 주세요.")
-        @Size(min = 4, max = 64, message = "비밀번호는 8자 이상 64자 이하로 입력해 주세요.")
+        @Size(min = 4, max = 64, message = "비밀번호는 4자 이상 64자 이하로 입력해 주세요.")
         String newPassword
 ) {
 }
