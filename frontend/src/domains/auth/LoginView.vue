@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { useRoute, useRouter } from 'vue-router'
+import { getErrorMessage } from '@/shared/api/error'
 import { useAuthStore } from './auth.store'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const loginId = ref('')
@@ -13,23 +14,29 @@ const errorMessage = ref('')
 const loading = ref(false)
 const capsLockOn = ref(false)
 
+// 세션이 끊겨서 이 화면으로 왔는지
+const expired = route.query.expired === '1'
+
 async function onSubmit() {
   errorMessage.value = ''
   loading.value = true
   try {
     await auth.login({ loginId: loginId.value, password: password.value })
-    await router.push({ name: 'main' })
-  } catch (e) {
-    if (axios.isAxiosError(e) && e.response?.status === 401) {
-      errorMessage.value = e.response.data?.message ?? '로그인에 실패했습니다.'
-    } else if (axios.isAxiosError(e) && e.response?.status === 400) {
-      errorMessage.value = '아이디와 비밀번호를 입력해 주세요.'
-    } else {
-      errorMessage.value = '서버와 통신할 수 없습니다. 잠시 후 다시 시도해 주세요.'
-    }
+    await router.push(redirectPath())
+  } catch (error) {
+    errorMessage.value = getErrorMessage(error, '서버와 통신할 수 없습니다. 잠시 후 다시 시도해 주세요.')
   } finally {
     loading.value = false
   }
+}
+
+/** 로그인 후 돌아갈 주소. 우리 사이트 안의 경로만 허용한다 */
+function redirectPath(): string {
+  const value = route.query.redirect
+  if (typeof value === 'string' && value.startsWith('/') && !value.startsWith('//')) {
+    return value
+  }
+  return '/'
 }
 
 function checkCapsLock(event: KeyboardEvent) {

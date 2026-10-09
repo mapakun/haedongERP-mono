@@ -27,7 +27,7 @@ router.beforeEach(async (to) => {
     return auth.isLoggedIn && to.name === 'login' ? { name: 'main' } : true
   }
 
-  return auth.isLoggedIn ? true : { name: 'login' }
+  return auth.isLoggedIn ? true : { name: 'login', query: { redirect: to.fullPath } }
 })
 
 export default router
