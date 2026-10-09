@@ -16,3 +16,8 @@ export const roleLabel: Record<Role, string> = {
   ADMIN: '관리자',
   USER: '일반',
 }
+
+export interface MyPasswordChangeRequest {
+  currentPassword: string
+  newPassword: string
+}
