@@ -47,6 +47,12 @@ public class AuthController {
         return LoginUserResponse.from(loginUser);
     }
 
+    /** CSRF 토큰 쿠키를 받기 위한 요청. 본문은 없고, CsrfCookieFilter 가 쿠키를 내려준다 */
+    @GetMapping("/csrf")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void csrf() {
+    }
+
     /** 내 비밀번호 변경. 다른 기기의 세션은 끊기고, 지금 이 세션은 새 정보로 유지된다 */
     @PutMapping("/me/password")
     public void changeMyPassword(@Valid @RequestBody MyPasswordChangeRequest request,

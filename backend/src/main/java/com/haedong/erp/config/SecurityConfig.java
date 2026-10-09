@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .addFilterBefore(new AuthStateCheckFilter(employeeMapper), AuthorizationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/error").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/csrf", "/error").permitAll()
                         // 직원: 목록은 로그인한 누구나 (일반 사용자는 이름·직종·서열만), 나머지는 관리자만
                         .requestMatchers(HttpMethod.GET, "/api/employees/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN")
