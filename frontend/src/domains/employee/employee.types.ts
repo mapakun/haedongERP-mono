@@ -20,6 +20,14 @@ export interface EmployeeSummary {
   retiredAt: string | null
 }
 
+/** 일반 사용자가 받는 직원 목록 한 줄 (백엔드 EmployeeBriefResponse) */
+export interface EmployeeBrief {
+  id: number
+  name: string
+  jobType: JobType
+  seniorityNo: number | null
+}
+
 export interface EmployeeSearchParams {
   keyword?: string
   jobType?: JobType

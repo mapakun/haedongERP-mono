@@ -1,6 +1,7 @@
 import { http } from '@/shared/api/http'
 import type { PageResponse } from '@/shared/api/page'
 import type {
+  EmployeeBrief,
   EmployeeDetail,
   EmployeeSaveRequest,
   EmployeeSearchParams,
@@ -11,6 +12,14 @@ export async function searchEmployees(
   params: EmployeeSearchParams,
 ): Promise<PageResponse<EmployeeSummary>> {
   const { data } = await http.get<PageResponse<EmployeeSummary>>('/employees', { params })
+  return data
+}
+
+/** 일반 사용자용: 같은 주소지만 서버가 이름·직종·서열만 돌려준다 */
+export async function searchEmployeeBriefs(
+  params: EmployeeSearchParams,
+): Promise<PageResponse<EmployeeBrief>> {
+  const { data } = await http.get<PageResponse<EmployeeBrief>>('/employees', { params })
   return data
 }
 
