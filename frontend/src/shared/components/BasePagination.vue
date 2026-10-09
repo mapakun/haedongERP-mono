@@ -29,46 +29,26 @@ function go(target: number) {
 </script>
 
 <template>
-  <nav class="pagination">
-    <button type="button" :disabled="page <= 1" @click="go(page - 1)">이전</button>
+  <nav class="mt-4 flex flex-wrap justify-center gap-1">
+    <button type="button" class="btn px-2.5 py-1.5" :disabled="page <= 1" @click="go(page - 1)">
+      이전
+    </button>
     <button
       v-for="number in pageNumbers"
       :key="number"
       type="button"
-      :class="{ active: number === page }"
+      :class="['btn min-w-9 px-2.5 py-1.5', { 'btn-primary': number === page }]"
       @click="go(number)"
     >
       {{ number }}
     </button>
-    <button type="button" :disabled="page >= totalPages" @click="go(page + 1)">다음</button>
+    <button
+      type="button"
+      class="btn px-2.5 py-1.5"
+      :disabled="page >= totalPages"
+      @click="go(page + 1)"
+    >
+      다음
+    </button>
   </nav>
 </template>
-
-<style scoped>
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 4px;
-  margin-top: 16px;
-}
-.pagination button {
-  min-width: 36px;
-  padding: 6px 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-.pagination button:hover:not(:disabled) {
-  background: var(--color-bg);
-}
-.pagination button:disabled {
-  color: var(--color-text-muted);
-  cursor: default;
-}
-.pagination button.active {
-  color: #fff;
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-</style>

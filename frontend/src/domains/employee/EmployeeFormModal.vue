@@ -146,49 +146,66 @@ async function onCancelRetirement() {
     <p v-if="loading">불러오는 중...</p>
 
     <template v-else>
-      <form id="employee-form" class="form" @submit.prevent="onSubmit">
-        <label>
-          <span>이름 <em class="required">*</em></span>
-          <input v-model="form.name" type="text" maxlength="50" required placeholder="동명이인은 홍길동1 처럼 입력" />
+      <form id="employee-form" class="flex flex-col gap-3.5" @submit.prevent="onSubmit">
+        <label class="flex flex-col gap-1.5">
+          <span>이름 <em class="text-danger not-italic">*</em></span>
+          <input
+            v-model="form.name"
+            type="text"
+            class="input"
+            maxlength="50"
+            required
+            placeholder="동명이인은 홍길동1 처럼 입력"
+          />
         </label>
 
-        <label>
-          <span>직종 <em class="required">*</em></span>
-          <select v-model="form.jobType">
+        <label class="flex flex-col gap-1.5">
+          <span>직종 <em class="text-danger not-italic">*</em></span>
+          <select v-model="form.jobType" class="input">
             <option value="DRIVER">기사</option>
             <option value="OFFICE">사무</option>
           </select>
         </label>
 
-        <!-- ★ 퇴사자는 서열 입력 칸을 숨긴다 -->
-        <label v-if="form.jobType === 'DRIVER' && !retiredAt">
+        <!-- 퇴사자는 서열 입력 칸을 숨긴다 -->
+        <label v-if="form.jobType === 'DRIVER' && !retiredAt" class="flex flex-col gap-1.5">
           <span>입사 서열</span>
-          <input v-model.number="form.seniorityNo" type="number" min="1" placeholder="1 = 가장 먼저 입사" />
+          <input
+            v-model.number="form.seniorityNo"
+            type="number"
+            class="input"
+            min="1"
+            placeholder="1 = 가장 먼저 입사"
+          />
         </label>
 
-        <label>
+        <label class="flex flex-col gap-1.5">
           <span>생년월일</span>
-          <input v-model="form.birthDate" type="date" />
+          <input v-model="form.birthDate" type="date" class="input" />
         </label>
 
-        <label>
+        <label class="flex flex-col gap-1.5">
           <span>휴대폰</span>
-          <input v-model="form.mobile" type="tel" placeholder="010-1234-5678" />
+          <input v-model="form.mobile" type="tel" class="input" placeholder="010-1234-5678" />
         </label>
 
-        <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+        <p v-if="errorMessage" class="text-danger">{{ errorMessage }}</p>
       </form>
 
-      <!-- ★ 재직 관리 (수정일 때만) -->
-      <section v-if="loaded" class="status">
-        <h4>재직 관리</h4>
-        <div v-if="retiredAt" class="status-row">
+      <!-- 재직 관리 (수정일 때만) -->
+      <section v-if="loaded" class="mt-5 border-t border-line pt-4">
+        <h4 class="mb-2.5 font-semibold text-muted">재직 관리</h4>
+        <div v-if="retiredAt" class="flex items-center justify-between">
           <span>퇴사 ({{ retiredAt }})</span>
-          <button type="button" class="btn" :disabled="saving" @click="onCancelRetirement">퇴사 취소</button>
+          <button type="button" class="btn" :disabled="saving" @click="onCancelRetirement">
+            퇴사 취소
+          </button>
         </div>
-        <div v-else class="status-row">
+        <div v-else class="flex items-center justify-between">
           <span>재직 중</span>
-          <button v-if="!isSelf" type="button" class="btn btn-danger" @click="onRetireClick">퇴사 처리</button>
+          <button v-if="!isSelf" type="button" class="btn btn-danger" @click="onRetireClick">
+            퇴사 처리
+          </button>
         </div>
       </section>
     </template>
@@ -201,45 +218,3 @@ async function onCancelRetirement() {
     </template>
   </BaseModal>
 </template>
-
-<style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.form label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.form input,
-.form select {
-  padding: 8px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-}
-.required {
-  font-style: normal;
-  color: var(--color-danger);
-}
-.error {
-  margin: 0;
-  color: var(--color-danger);
-}
-.status {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
-}
-.status h4 {
-  margin: 0 0 10px;
-  font-size: 14px;
-  color: var(--color-text-muted);
-}
-.status-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-</style>

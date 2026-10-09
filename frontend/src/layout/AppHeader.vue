@@ -2,6 +2,10 @@
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/domains/auth/auth.store'
 
+const emit = defineEmits<{
+  toggleMenu: []
+}>()
+
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -12,40 +16,32 @@ async function onLogout() {
 </script>
 
 <template>
-  <header class="header">
-    <strong class="logo">해동 ERP</strong>
-    <div class="user">
-      <span>{{ auth.user?.name }}님 ({{ auth.user?.role === 'ADMIN' ? '관리자' : '사용자' }})</span>
-      <button type="button" class="logout" @click="onLogout">로그아웃</button>
+  <header
+    class="flex h-14 shrink-0 items-center justify-between border-b border-line bg-surface px-4 md:px-6"
+  >
+    <div class="flex items-center gap-2">
+      <!-- 휴대폰에서만 보이는 메뉴 버튼 -->
+      <button
+        type="button"
+        class="-ml-2 cursor-pointer rounded-md p-2 hover:bg-canvas md:hidden"
+        aria-label="메뉴 열기"
+        @click="emit('toggleMenu')"
+      >
+        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <strong class="text-lg">해동 ERP</strong>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <span>
+        {{ auth.user?.name }}님
+        <span class="hidden text-muted sm:inline">
+          ({{ auth.user?.role === 'ADMIN' ? '관리자' : '사용자' }})
+        </span>
+      </span>
+      <button type="button" class="btn px-3 py-1.5" @click="onLogout">로그아웃</button>
     </div>
   </header>
 </template>
-
-<style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-.logo {
-  font-size: 18px;
-}
-.user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.logout {
-  padding: 6px 12px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-.logout:hover {
-  background: var(--color-bg);
-}
-</style>

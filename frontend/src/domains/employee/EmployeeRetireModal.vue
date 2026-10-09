@@ -50,21 +50,26 @@ async function onSubmit() {
 
 <template>
   <BaseModal :open="target !== null" title="퇴사 처리" @close="emit('close')">
-    <form v-if="target" id="retire-form" class="form" @submit.prevent="onSubmit">
-      <p class="lead"><strong>{{ target.name }}</strong> 님을 퇴사 처리합니다.</p>
+    <form
+      v-if="target"
+      id="retire-form"
+      class="flex flex-col gap-3.5"
+      @submit.prevent="onSubmit"
+    >
+      <p><strong>{{ target.name }}</strong> 님을 퇴사 처리합니다.</p>
 
-      <label>
-        <span>퇴사일 <em class="required">*</em></span>
-        <input v-model="retiredAt" type="date" :max="today" required />
+      <label class="flex flex-col gap-1.5">
+        <span>퇴사일 <em class="text-danger not-italic">*</em></span>
+        <input v-model="retiredAt" type="date" class="input" :max="today" required />
       </label>
 
-      <ul class="notice">
+      <ul class="list-disc space-y-1 rounded-md bg-canvas py-3 pr-3 pl-7 text-muted">
         <li v-if="target.seniorityNo !== null">입사 서열({{ target.seniorityNo }}번)이 비워집니다.</li>
         <li>로그인 계정이 있다면 로그인이 막힙니다.</li>
         <li>직원 목록에서 기본으로 보이지 않습니다. (퇴사자 포함 시 조회)</li>
       </ul>
 
-      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="text-danger">{{ errorMessage }}</p>
     </form>
 
     <template #footer>
@@ -75,39 +80,3 @@ async function onSubmit() {
     </template>
   </BaseModal>
 </template>
-
-<style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.form label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.form input {
-  padding: 8px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-}
-.lead {
-  margin: 0;
-}
-.notice {
-  margin: 0;
-  padding: 12px 12px 12px 28px;
-  color: var(--color-text-muted);
-  background: var(--color-bg);
-  border-radius: var(--radius);
-}
-.required {
-  font-style: normal;
-  color: var(--color-danger);
-}
-.error {
-  margin: 0;
-  color: var(--color-danger);
-}
-</style>

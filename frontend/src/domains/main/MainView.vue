@@ -6,7 +6,7 @@ const auth = useAuthStore()
 
 <template>
   <section>
-    <h2>홈</h2>
+    <h2 class="mb-2 text-xl font-bold">홈</h2>
     <p>{{ auth.user?.name }}님, 환영합니다.</p>
   </section>
 </template>

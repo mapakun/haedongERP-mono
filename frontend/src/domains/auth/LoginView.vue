@@ -38,92 +38,36 @@ function checkCapsLock(event: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="login-page">
-    <form class="login-box" @submit.prevent="onSubmit">
-      <h1>해동 ERP</h1>
+  <div class="flex min-h-dvh items-center justify-center bg-canvas p-4">
+    <form
+      class="flex w-full max-w-sm flex-col gap-4 rounded-lg bg-surface p-8 shadow-md"
+      @submit.prevent="onSubmit"
+    >
+      <h1 class="mb-2 text-center text-2xl font-bold">해동 ERP</h1>
 
-      <label>
+      <label class="flex flex-col gap-1.5">
         아이디
-        <input v-model="loginId" type="text" autocomplete="username" required />
+        <input v-model="loginId" type="text" class="input" autocomplete="username" required />
       </label>
 
-      <label>
+      <label class="flex flex-col gap-1.5">
         비밀번호
         <input
           v-model="password"
           type="password"
+          class="input"
           autocomplete="current-password"
           required
           @keyup="checkCapsLock"
         />
       </label>
 
-      <p v-if="capsLockOn" class="hint">Caps Lock이 켜져 있습니다.</p>
-      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <p v-if="capsLockOn" class="text-xs text-amber-700">Caps Lock이 켜져 있습니다.</p>
+      <p v-if="errorMessage" class="text-xs text-danger">{{ errorMessage }}</p>
 
-      <button type="submit" :disabled="loading">
+      <button type="submit" class="btn btn-primary py-3 text-base" :disabled="loading">
         {{ loading ? '로그인 중...' : '로그인' }}
       </button>
     </form>
   </div>
 </template>
-
-<style scoped>
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-}
-.login-box {
-  width: 320px;
-  padding: 32px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.login-box h1 {
-  margin: 0 0 8px;
-  text-align: center;
-  font-size: 24px;
-}
-.login-box label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
-}
-.login-box input {
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-}
-.login-box button {
-  padding: 12px;
-  font-size: 16px;
-  color: #fff;
-  background: #2563eb;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.login-box button:disabled {
-  background: #93c5fd;
-  cursor: default;
-}
-.hint {
-  margin: 0;
-  color: #b45309;
-  font-size: 13px;
-}
-.error {
-  margin: 0;
-  color: #dc2626;
-  font-size: 13px;
-}
-</style>
