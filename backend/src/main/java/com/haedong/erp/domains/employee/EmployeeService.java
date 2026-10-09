@@ -2,6 +2,7 @@ package com.haedong.erp.domains.employee;
 
 import com.haedong.erp.common.BusinessException;
 import com.haedong.erp.common.PageResponse;
+import com.haedong.erp.domains.employee.dto.EmployeeBriefResponse;
 import com.haedong.erp.domains.employee.dto.EmployeeDetailResponse;
 import com.haedong.erp.domains.employee.dto.EmployeeRetireRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSaveRequest;
@@ -24,6 +25,14 @@ public class EmployeeService {
     public PageResponse<EmployeeSummaryResponse> search(EmployeeSearchRequest request) {
         List<EmployeeSummaryResponse> items = employeeMapper.search(request);
         long totalCount = employeeMapper.count(request);
+        return new PageResponse<>(items, totalCount, request.getPage(), request.getSize());
+    }
+
+    /** 일반 사용자용 목록: 이름·직종·서열만, 재직자만 */
+    @Transactional(readOnly = true)
+    public PageResponse<EmployeeBriefResponse> searchBrief(EmployeeSearchRequest request) {
+        List<EmployeeBriefResponse> items = employeeMapper.searchBrief(request);
+        long totalCount = employeeMapper.countBrief(request);
         return new PageResponse<>(items, totalCount, request.getPage(), request.getSize());
     }
 

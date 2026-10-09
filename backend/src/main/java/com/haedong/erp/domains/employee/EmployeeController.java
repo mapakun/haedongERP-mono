@@ -6,10 +6,10 @@ import com.haedong.erp.domains.employee.dto.EmployeeDetailResponse;
 import com.haedong.erp.domains.employee.dto.EmployeeRetireRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSaveRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSearchRequest;
-import com.haedong.erp.domains.employee.dto.EmployeeSummaryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +22,12 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
+    /** 관리자는 전체 정보, 일반 사용자는 이름·직종·서열만 받는다 */
     @GetMapping
-    public PageResponse<EmployeeSummaryResponse> search(@ModelAttribute EmployeeSearchRequest request) {
-        return employeeService.search(request);
+    public PageResponse<?> search(@ModelAttribute EmployeeSearchRequest request, Authentication authentication) {
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        return admin ? employeeService.search(request) : employeeService.searchBrief(request);
     }
 
     @GetMapping("/{id}")

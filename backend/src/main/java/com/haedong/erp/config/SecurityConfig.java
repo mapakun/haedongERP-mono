@@ -1,5 +1,7 @@
 package com.haedong.erp.config;
 
+import com.haedong.erp.domains.auth.AuthStateCheckFilter;
+import com.haedong.erp.domains.employee.EmployeeMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -20,15 +23,20 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, EmployeeMapper employeeMapper)
+            throws Exception {
         http
-                // TODO Step 7(Vue 연동)에서 CSRF 토큰 방식으로 다시 활성화
                 .csrf(csrf -> csrf.spa())
                 .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+                // 권한 검사 직전에, 로그인 이후 계정 정보가 바뀌었는지 확인
+                .addFilterBefore(new AuthStateCheckFilter(employeeMapper), AuthorizationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/error").permitAll()
+                        // 직원: 목록은 로그인한 누구나 (일반 사용자는 이름·직종·서열만), 나머지는 관리자만
+                        .requestMatchers(HttpMethod.GET, "/api/employees/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/employees/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/employees/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception

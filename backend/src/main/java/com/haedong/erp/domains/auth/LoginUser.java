@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,6 +20,8 @@ public class LoginUser implements UserDetails, CredentialsContainer {
     private final String name;
     private final Role role;
     private final boolean enabled;
+    /** 로그인할 때 DB 에서 읽은 값. 이후 DB 값이 바뀌면 이 세션은 더 이상 유효하지 않다 (AuthStateCheckFilter) */
+    private final OffsetDateTime authChangedAt;
     private String password;
 
     public LoginUser(Employee employee) {
@@ -27,6 +30,7 @@ public class LoginUser implements UserDetails, CredentialsContainer {
         this.name = employee.getName();
         this.role = employee.getRole();
         this.enabled = employee.isEnabled();
+        this.authChangedAt = employee.getAuthChangedAt();
         this.password = employee.getPassword();
     }
 

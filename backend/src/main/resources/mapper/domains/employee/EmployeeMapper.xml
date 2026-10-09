@@ -6,8 +6,12 @@
 
     <sql id="employeeColumns">
         id, name, job_type, birth_date, mobile, retired_at, login_id, password, role, enabled,
-        last_login_at, created_at, updated_at
+        failed_login_count, locked_until,
+        (locked_until IS NOT NULL AND locked_until > now()) AS locked,
+        auth_changed_at, last_login_at, created_at, updated_at
     </sql>
+
+    <!-- ========== 로그인 ========== -->
 
     <select id="findByLoginId" resultType="com.haedong.erp.domains.employee.Employee">
         SELECT <include refid="employeeColumns"/>
@@ -15,17 +19,39 @@
         WHERE login_id = #{loginId}
     </select>
 
-    <update id="updateLastLoginAt">
+    <!-- 실패 횟수 +1, 기준 횟수에 도달하면 잠그고 횟수는 0으로. SET 의 오른쪽 값은 모두 "변경 전" 값이다 -->
+    <update id="recordLoginFailure">
         UPDATE hd_employee
-        SET last_login_at = now()
+        SET failed_login_count = CASE WHEN failed_login_count + 1 >= #{maxAttempts} THEN 0
+                                      ELSE failed_login_count + 1 END,
+            locked_until       = CASE WHEN failed_login_count + 1 >= #{maxAttempts}
+                                      THEN now() + make_interval(mins => #{lockMinutes})
+                                      ELSE locked_until END
         WHERE id = #{id}
     </update>
+
+    <update id="recordLoginSuccess">
+        UPDATE hd_employee
+        SET failed_login_count = 0,
+            locked_until       = NULL,
+            last_login_at      = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 요청마다 로그인 세션이 아직 유효한지 확인하는 용도 -->
+    <select id="findAuthChangedAt" resultType="java.time.OffsetDateTime">
+        SELECT auth_changed_at
+        FROM hd_employee
+        WHERE id = #{id}
+    </select>
+
+    <!-- ========== 목록 (관리자) ========== -->
 
     <sql id="searchCondition">
         <where>
             <if test="keyword != null">
                 AND (e.name LIKE '%' || #{keyword} || '%'
-                OR e.mobile LIKE '%' || #{keyword} || '%')
+                     OR e.mobile LIKE '%' || #{keyword} || '%')
             </if>
             <if test="jobType != null">
                 AND e.job_type = #{jobType}
@@ -38,15 +64,15 @@
 
     <select id="search" resultType="com.haedong.erp.domains.employee.dto.EmployeeSummaryResponse">
         SELECT e.id,
-        e.name,
-        e.job_type,
-        e.birth_date,
-        e.mobile,
-        e.retired_at,
-        d.seniority_no,
-        e.role,
-        e.enabled,
-        e.login_id IS NOT NULL AS has_account
+               e.name,
+               e.job_type,
+               e.birth_date,
+               e.mobile,
+               e.retired_at,
+               d.seniority_no,
+               e.role,
+               e.enabled,
+               e.login_id IS NOT NULL AS has_account
         FROM hd_employee e
         LEFT JOIN hd_driver d ON d.employee_name = e.name
         <include refid="searchCondition"/>
@@ -60,7 +86,42 @@
         <include refid="searchCondition"/>
     </select>
 
-    <!-- 상세 / 수정용 조회 -->
+    <!-- ========== 목록 (일반 사용자) ==========
+         이름으로만 검색한다. 휴대폰 번호로 검색되면 "이 번호의 주인"을 알아낼 수 있기 때문.
+         퇴사자는 항상 제외한다. -->
+
+    <sql id="briefSearchCondition">
+        <where>
+            e.retired_at IS NULL
+            <if test="keyword != null">
+                AND e.name LIKE '%' || #{keyword} || '%'
+            </if>
+            <if test="jobType != null">
+                AND e.job_type = #{jobType}
+            </if>
+        </where>
+    </sql>
+
+    <select id="searchBrief" resultType="com.haedong.erp.domains.employee.dto.EmployeeBriefResponse">
+        SELECT e.id,
+               e.name,
+               e.job_type,
+               d.seniority_no
+        FROM hd_employee e
+        LEFT JOIN hd_driver d ON d.employee_name = e.name
+        <include refid="briefSearchCondition"/>
+        ORDER BY d.seniority_no NULLS LAST, e.name
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countBrief" resultType="long">
+        SELECT COUNT(*)
+        FROM hd_employee e
+        <include refid="briefSearchCondition"/>
+    </select>
+
+    <!-- ========== 상세 / 수정용 조회 ========== -->
+
     <select id="findById" resultType="com.haedong.erp.domains.employee.Employee">
         SELECT <include refid="employeeColumns"/>
         FROM hd_employee
@@ -69,70 +130,80 @@
 
     <select id="findDetailById" resultType="com.haedong.erp.domains.employee.dto.EmployeeDetailResponse">
         SELECT e.id,
-        e.name,
-        e.job_type,
-        e.birth_date,
-        e.mobile,
-        e.retired_at,
-        d.seniority_no,
-        e.role,
-        e.enabled,
-        e.login_id IS NOT NULL AS has_account
+               e.name,
+               e.job_type,
+               e.birth_date,
+               e.mobile,
+               e.retired_at,
+               d.seniority_no,
+               e.role,
+               e.enabled,
+               e.login_id IS NOT NULL AS has_account,
+               (e.locked_until IS NOT NULL AND e.locked_until > now()) AS locked,
+               e.locked_until
         FROM hd_employee e
         LEFT JOIN hd_driver d ON d.employee_name = e.name
         WHERE e.id = #{id}
     </select>
 
-    <!-- 중복 검사 -->
+    <!-- ========== 중복 검사 ========== -->
+
     <select id="existsByName" resultType="boolean">
         SELECT EXISTS (
-        SELECT 1 FROM hd_employee
-        WHERE name = #{name}
-        <if test="excludeId != null">
-            AND id != #{excludeId}
-        </if>
+            SELECT 1 FROM hd_employee
+            WHERE name = #{name}
+            <if test="excludeId != null">
+                AND id != #{excludeId}
+            </if>
         )
     </select>
 
     <select id="existsBySeniorityNo" resultType="boolean">
         SELECT EXISTS (
-        SELECT 1 FROM hd_driver
-        WHERE seniority_no = #{seniorityNo}
-        <if test="excludeName != null">
-            AND employee_name != #{excludeName}
-        </if>
+            SELECT 1 FROM hd_driver
+            WHERE seniority_no = #{seniorityNo}
+            <if test="excludeName != null">
+                AND employee_name != #{excludeName}
+            </if>
         )
     </select>
 
-    <!-- 직원 저장 -->
+    <!-- ========== 직원 저장 ========== -->
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO hd_employee (name, job_type, birth_date, mobile)
         VALUES (#{name}, #{jobType}, #{birthDate}, #{mobile})
     </insert>
 
+    <!-- 로그인 아이디는 항상 이름과 같다. 계정이 있는 직원의 이름이 바뀌면 아이디도 바꾸고,
+         기존 로그인 세션은 끊기도록 auth_changed_at 을 갱신한다. (SET 의 오른쪽 name, login_id 는 변경 전 값) -->
     <update id="update">
         UPDATE hd_employee
-        SET name       = #{name},
-        job_type   = #{jobType},
-        birth_date = #{birthDate},
-        mobile     = #{mobile},
-        updated_at = now()
+        SET name            = #{name},
+            job_type        = #{jobType},
+            birth_date      = #{birthDate},
+            mobile          = #{mobile},
+            login_id        = CASE WHEN login_id IS NULL THEN NULL ELSE #{name} END,
+            auth_changed_at = CASE WHEN login_id IS NOT NULL AND name != #{name} THEN now()
+                                   ELSE auth_changed_at END,
+            updated_at      = now()
         WHERE id = #{id}
     </update>
 
-    <!-- 기사 정보 -->
+    <!-- ========== 기사 정보 ========== -->
+
     <insert id="upsertDriver">
         INSERT INTO hd_driver (employee_name, seniority_no)
         VALUES (#{employeeName}, #{seniorityNo})
         ON CONFLICT (employee_name)
         DO UPDATE SET seniority_no = EXCLUDED.seniority_no,
-        updated_at   = now()
+                      updated_at   = now()
     </insert>
 
     <update id="renameDriver">
         UPDATE hd_driver
         SET employee_name = #{newName},
-        updated_at    = now()
+            updated_at    = now()
         WHERE employee_name = #{oldName}
     </update>
 
@@ -141,20 +212,75 @@
         WHERE employee_name = #{employeeName}
     </delete>
 
-    <!-- 퇴사 / 퇴사 취소 -->
+    <!-- ========== 퇴사 / 퇴사 취소 ========== -->
+
     <update id="updateRetirement">
         UPDATE hd_employee
-        SET retired_at = #{retiredAt},
-        enabled    = #{enabled},
-        updated_at = now()
+        SET retired_at      = #{retiredAt},
+            enabled         = #{enabled},
+            auth_changed_at = now(),
+            updated_at      = now()
         WHERE id = #{id}
     </update>
 
     <update id="clearSeniority">
         UPDATE hd_driver
         SET seniority_no = NULL,
-        updated_at   = now()
+            updated_at   = now()
         WHERE employee_name = #{employeeName}
+    </update>
+
+    <!-- ========== 계정 관리 ==========
+         계정·권한·비밀번호가 바뀌면 auth_changed_at 을 갱신해서, 그 직원의 기존 로그인 세션이 끊기게 한다. -->
+
+    <update id="issueAccount">
+        UPDATE hd_employee
+        SET login_id           = #{loginId},
+            password           = #{passwordHash},
+            role               = #{role},
+            failed_login_count = 0,
+            locked_until       = NULL,
+            auth_changed_at    = now(),
+            updated_at         = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="revokeAccount">
+        UPDATE hd_employee
+        SET login_id           = NULL,
+            password           = NULL,
+            role               = 'USER',
+            failed_login_count = 0,
+            locked_until       = NULL,
+            auth_changed_at    = now(),
+            updated_at         = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateRole">
+        UPDATE hd_employee
+        SET role            = #{role},
+            auth_changed_at = now(),
+            updated_at      = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE hd_employee
+        SET password           = #{passwordHash},
+            failed_login_count = 0,
+            locked_until       = NULL,
+            auth_changed_at    = now(),
+            updated_at         = now()
+        WHERE id = #{id}
+    </update>
+
+    <update id="unlock">
+        UPDATE hd_employee
+        SET failed_login_count = 0,
+            locked_until       = NULL,
+            updated_at         = now()
+        WHERE id = #{id}
     </update>
 
 </mapper>

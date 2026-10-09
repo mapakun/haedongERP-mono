@@ -1,5 +1,6 @@
 package com.haedong.erp.domains.employee.dto;
 
+import com.haedong.erp.common.NameNormalizer;
 import com.haedong.erp.domains.employee.JobType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +11,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.text.Normalizer;
 import java.time.LocalDate;
 
 @Getter
@@ -34,7 +34,7 @@ public class EmployeeSaveRequest {
     private Integer seniorityNo;
 
     public String getName() {
-        return name == null ? null : Normalizer.normalize(name.strip(), Normalizer.Form.NFC);
+        return NameNormalizer.normalize(name);
     }
 
     public String getMobile() {
