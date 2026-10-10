@@ -1,0 +1,106 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: # Actions 화면에서 직접 실행하는 버튼
+
+permissions:
+  contents: read
+  packages: write # GHCR 에 이미지를 올리기 위해
+
+env:
+  BACKEND_IMAGE: ghcr.io/mapakun/haedongerp-backend
+  WEB_IMAGE: ghcr.io/mapakun/haedongerp-web
+
+jobs:
+  # ① 테스트: 하나라도 실패하면 이후 단계는 실행되지 않는다
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Backend test
+        working-directory: backend
+        run: |
+          chmod +x gradlew
+          ./gradlew test --no-daemon
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Frontend type-check & lint
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run type-check
+          npx eslint src
+
+  # ② 이미지 빌드 → GHCR 에 올리기
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build & push web
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:latest
+            ${{ env.WEB_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  # ③ 서버에 접속해서 새 이미지로 교체
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key ubuntu@"$HOST" '
+            set -e
+            cd ~/haedongERP
+            git pull --ff-only
+            docker compose pull
+            docker compose up -d --no-build
+            docker image prune -f
+          '
