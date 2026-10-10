@@ -54,6 +54,11 @@ public class LoginUser implements UserDetails, CredentialsContainer {
         return enabled;
     }
 
+    /** 최고 관리자인지 (MASTER 보호 규칙에서 사용) */
+    public boolean isMaster() {
+        return role == Role.MASTER;
+    }
+
     @Override
     public void eraseCredentials() {
         this.password = null;

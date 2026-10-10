@@ -133,4 +133,16 @@ class EmployeeControllerSecurityTest {
                                 """))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(roles = "MASTER")
+    void 최고_관리자는_관리자_기능을_쓸_수_있다() throws Exception {
+        given(employeeService.create(any())).willReturn(1L);
+
+        mockMvc.perform(post("/api/employees").with(csrf()).contentType(APPLICATION_JSON).content(BODY))
+                .andExpect(status().isCreated());
+        mockMvc.perform(get("/api/employees")).andExpect(status().isOk());
+
+        then(employeeService).should().search(any());
+    }
 }

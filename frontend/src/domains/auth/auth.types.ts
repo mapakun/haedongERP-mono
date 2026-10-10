@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'USER'
+export type Role = 'MASTER' | 'ADMIN' | 'USER'
 
 export interface LoginUser {
   id: number
@@ -13,6 +13,7 @@ export interface LoginRequest {
 }
 
 export const roleLabel: Record<Role, string> = {
+  MASTER: '최고 관리자',
   ADMIN: '관리자',
   USER: '일반',
 }

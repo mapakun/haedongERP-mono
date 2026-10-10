@@ -25,6 +25,10 @@ const ROLE_OPTIONS: Role[] = ['USER', 'ADMIN']
 
 const auth = useAuthStore()
 const isSelf = computed(() => props.employee.id === auth.user?.id)
+// 최고 관리자의 계정은 최고 관리자만 바꿀 수 있다
+const isProtectedMaster = computed(() => props.employee.role === 'MASTER' && !auth.isMaster)
+// 최고 관리자의 권한은 화면에서 바꿀 수 없다 (DB 에서만)
+const canChangeRole = computed(() => props.employee.role !== 'MASTER')
 
 const password = ref('')
 const role = ref<Role>('USER')
@@ -146,13 +150,16 @@ function cancelPasswordReset() {
       </dl>
 
       <p v-if="isSelf" class="text-muted">본인 계정은 상단의 [비밀번호 변경]에서 관리합니다.</p>
+      <p v-else-if="isProtectedMaster" class="text-muted">
+        최고 관리자의 계정은 최고 관리자만 변경할 수 있습니다.
+      </p>
 
       <div v-else class="flex flex-col gap-2">
         <div v-if="employee.locked">
           <button type="button" class="btn" :disabled="busy" @click="onUnlock">잠금 해제</button>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div v-if="canChangeRole" class="flex flex-wrap items-center gap-2">
           <select v-model="role" class="input w-auto">
             <option v-for="option in ROLE_OPTIONS" :key="option" :value="option">
               {{ roleLabel[option] }}

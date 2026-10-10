@@ -2,6 +2,7 @@ package com.haedong.erp.domains.employee;
 
 import com.haedong.erp.common.BusinessException;
 import com.haedong.erp.common.PageResponse;
+import com.haedong.erp.domains.auth.LoginUser;
 import com.haedong.erp.domains.employee.dto.EmployeeBriefResponse;
 import com.haedong.erp.domains.employee.dto.EmployeeDetailResponse;
 import com.haedong.erp.domains.employee.dto.EmployeeRetireRequest;
@@ -54,8 +55,9 @@ public class EmployeeService {
     }
 
     @Transactional
-    public void update(Long id, EmployeeSaveRequest request) {
+    public void update(Long id, EmployeeSaveRequest request, LoginUser currentUser) {
         Employee employee = findEmployee(id);
+        rejectIfProtectedMaster(employee, currentUser);
         String oldName = employee.getName();
 
         if (employee.isRetired() && request.getSeniorityNo() != null) {
@@ -73,12 +75,13 @@ public class EmployeeService {
     }
 
     @Transactional
-    public void retire(Long id, EmployeeRetireRequest request, Long currentUserId) {
+    public void retire(Long id, EmployeeRetireRequest request, LoginUser currentUser) {
         Employee employee = findEmployee(id);
 
-        if (employee.getId().equals(currentUserId)) {
+        if (employee.getId().equals(currentUser.getId())) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, "본인은 퇴사 처리할 수 없습니다.");
         }
+        rejectIfProtectedMaster(employee, currentUser);
         if (employee.isRetired()) {
             throw new BusinessException(HttpStatus.CONFLICT, "이미 퇴사 처리된 직원입니다.");
         }
@@ -89,8 +92,9 @@ public class EmployeeService {
     }
 
     @Transactional
-    public void cancelRetirement(Long id) {
+    public void cancelRetirement(Long id, LoginUser currentUser) {
         Employee employee = findEmployee(id);
+        rejectIfProtectedMaster(employee, currentUser);
 
         if (!employee.isRetired()) {
             throw new BusinessException(HttpStatus.CONFLICT, "퇴사 상태가 아닌 직원입니다.");
@@ -98,6 +102,13 @@ public class EmployeeService {
 
         employee.cancelRetirement();
         employeeMapper.updateRetirement(employee);
+    }
+
+    /** 최고 관리자(MASTER)의 정보는 최고 관리자만 바꿀 수 있다 */
+    private void rejectIfProtectedMaster(Employee target, LoginUser currentUser) {
+        if (target.getRole() == Role.MASTER && !currentUser.isMaster()) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "최고 관리자의 정보는 최고 관리자만 변경할 수 있습니다.");
+        }
     }
 
     private void validate(EmployeeSaveRequest request, Long excludeId, String excludeDriverName) {

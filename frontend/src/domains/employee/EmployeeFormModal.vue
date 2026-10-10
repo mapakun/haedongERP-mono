@@ -39,6 +39,8 @@ const errorMessage = ref('')
 // ★ 퇴사 여부, 본인 여부
 const retiredAt = computed(() => loaded.value?.retiredAt ?? null)
 const isSelf = computed(() => props.employeeId !== null && props.employeeId === auth.user?.id)
+// 최고 관리자의 정보는 최고 관리자만 바꿀 수 있다
+const readOnly = computed(() => loaded.value?.role === 'MASTER' && !auth.isMaster)
 
 function resetForm() {
   Object.assign(form, { name: '', jobType: 'DRIVER', birthDate: '', mobile: '', seniorityNo: '' })
@@ -161,6 +163,9 @@ async function refreshLoaded() {
     <p v-if="loading">불러오는 중...</p>
 
     <template v-else>
+      <p v-if="readOnly" class="mb-3 rounded-md bg-canvas p-3 text-muted">
+        최고 관리자의 정보는 최고 관리자만 변경할 수 있습니다.
+      </p>
       <form id="employee-form" class="flex flex-col gap-3.5" @submit.prevent="onSubmit">
         <label class="flex flex-col gap-1.5">
           <span>이름 <em class="text-danger not-italic">*</em></span>
@@ -212,13 +217,13 @@ async function refreshLoaded() {
         <h4 class="mb-2.5 font-semibold text-muted">재직 관리</h4>
         <div v-if="retiredAt" class="flex items-center justify-between">
           <span>퇴사 ({{ retiredAt }})</span>
-          <button type="button" class="btn" :disabled="saving" @click="onCancelRetirement">
+          <button v-if="!readOnly" type="button" class="btn" :disabled="saving" @click="onCancelRetirement">
             퇴사 취소
           </button>
         </div>
         <div v-else class="flex items-center justify-between">
           <span>재직 중</span>
-          <button v-if="!isSelf" type="button" class="btn btn-danger" @click="onRetireClick">
+          <button v-if="!isSelf && !readOnly" type="button" class="btn btn-danger" @click="onRetireClick">
             퇴사 처리
           </button>
         </div>
@@ -229,7 +234,7 @@ async function refreshLoaded() {
 
     <template #footer>
       <button type="button" class="btn" @click="emit('close')">취소</button>
-      <button type="submit" form="employee-form" class="btn btn-primary" :disabled="saving || loading">
+      <button type="submit" form="employee-form" class="btn btn-primary" :disabled="saving || loading || readOnly">
         {{ saving ? '저장 중...' : '저장' }}
       </button>
     </template>
