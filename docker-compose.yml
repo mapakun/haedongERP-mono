@@ -1,5 +1,6 @@
 services:
   backend:
+    image: ghcr.io/mapakun/haedongerp-backend:latest
     build: ./backend
     container_name: haedong-backend
     restart: unless-stopped
@@ -11,6 +12,7 @@ services:
       - "8080"
 
   web:
+    image: ghcr.io/mapakun/haedongerp-web:latest
     build: ./frontend
     container_name: haedong-web
     restart: unless-stopped
