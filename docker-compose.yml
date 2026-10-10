@@ -10,6 +10,11 @@ services:
       TZ: Asia/Seoul
     expose:
       - "8080"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   web:
     image: ghcr.io/mapakun/haedongerp-web:latest
@@ -20,3 +25,8 @@ services:
       - backend
     ports:
       - "80:80"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
