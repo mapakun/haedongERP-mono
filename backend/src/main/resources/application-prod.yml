@@ -1,0 +1,15 @@
+# 운영 서버 전용 설정. SPRING_PROFILES_ACTIVE=prod 일 때 application.yml 위에 덮어씌워진다.
+
+logging:
+  level:
+    org.hibernate.SQL: warn
+    com.haedong.erp: info # 운영에서는 SQL 로그를 남기지 않는다
+
+server:
+  # nginx 가 붙여주는 X-Forwarded-* 헤더를 믿는다 (실제 접속 IP, https 여부를 알기 위해)
+  forward-headers-strategy: native
+  servlet:
+    session:
+      cookie:
+        # HTTPS 를 적용한 뒤 .env 에서 true 로 바꾼다. true 면 https 로만 쿠키가 오간다
+        secure: ${SESSION_COOKIE_SECURE:false}

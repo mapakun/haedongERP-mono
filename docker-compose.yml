@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: ./backend
+    container_name: haedong-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      TZ: Asia/Seoul
+    expose:
+      - "8080"
+
+  web:
+    build: ./frontend
+    container_name: haedong-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"

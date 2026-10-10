@@ -17,7 +17,7 @@ spring:
   # 테이블 생성·변경은 Flyway가 담당 → dev_user (DDL 가능)
   flyway:
     enabled: false
-    user: ${DB_DEV_USERNAME}
+    user: ${DB_DEV_USERNAME:}
     password: ${DB_DEV_PASSWORD}
 
   jpa:
