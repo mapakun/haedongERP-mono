@@ -69,6 +69,9 @@ function checkCapsLock(event: KeyboardEvent) {
         />
       </label>
 
+      <p v-if="expired && !errorMessage" class="text-xs text-amber-700">
+        로그인이 만료되었거나 계정 정보가 변경되었습니다. 다시 로그인해 주세요.
+      </p>
       <p v-if="capsLockOn" class="text-xs text-amber-700">Caps Lock이 켜져 있습니다.</p>
       <p v-if="errorMessage" class="text-xs text-danger">{{ errorMessage }}</p>
 
