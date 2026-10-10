@@ -1,9 +1,13 @@
 name: Deploy
 
+# 수동 실행만: Actions → Deploy → [Run workflow] → 브랜치 선택
 on:
-  push:
-    branches: [master]
-  workflow_dispatch: # Actions 화면에서 직접 실행하는 버튼
+  workflow_dispatch:
+
+# 배포가 동시에 두 번 돌지 않게 (나중 것은 앞의 것이 끝날 때까지 대기)
+concurrency:
+  group: deploy
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -82,7 +86,7 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
-  # ③ 서버에 접속해서 새 이미지로 교체
+  # ③ 서버에 접속해서, 선택한 브랜치의 커밋으로 맞추고 새 이미지로 교체
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -91,16 +95,19 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           HOST: ${{ secrets.SERVER_HOST }}
+          COMMIT: ${{ github.sha }}
         run: |
+          echo "배포: ${{ github.ref_name }} ($COMMIT)"
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/deploy_key ubuntu@"$HOST" '
+          ssh -i ~/.ssh/deploy_key ubuntu@"$HOST" "
             set -e
             cd ~/haedongERP
-            git pull --ff-only
+            git fetch --prune origin
+            git checkout --detach $COMMIT
             docker compose pull
             docker compose up -d --no-build
             docker image prune -f
-          '
+          "
