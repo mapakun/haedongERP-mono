@@ -44,14 +44,14 @@ public final class DutyPattern {
 
     /**
      * 시작점 이력으로 date 의 근무를 구한다.
-     * date 이전(같은 날 포함)의 가장 최근 시작점을 쓰고, 기준일이 같으면 나중에 입력한(id 가 큰) 것을 쓴다.
+     * date 이전(같은 날 포함)을 기준일로 하는 시작점 중 가장 나중에 입력한(id 가 큰) 것을 쓴다.
+     * → 새로 입력한 시작점은, 그 기준일 이후를 기준일로 하던 기존 시작점을 덮어쓴다.
      * 적용할 시작점이 없으면 빈 값 (= 근무표 미설정)
      */
     public static Optional<Shift> shiftOn(LocalDate date, List<DutyStart> starts) {
         return starts.stream()
                 .filter(start -> !start.getBaseDate().isAfter(date))
-                .max(Comparator.comparing(DutyStart::getBaseDate)
-                        .thenComparing(DutyStart::getId))
+                .max(Comparator.comparing(DutyStart::getId))
                 .map(start -> shiftOf(cycleDayOf(start.getBaseDate(), start.getCycleDay(), date)));
     }
 

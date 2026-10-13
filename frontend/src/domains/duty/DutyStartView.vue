@@ -67,7 +67,8 @@ async function onSubmit() {
     return
   }
   const ok = window.confirm(
-    `${baseDate.value} 기준으로 ${items.value.length}명의 시작점을 저장할까요?\n기존 시작점은 지워지지 않고 이력으로 남습니다.`,
+    `${baseDate.value} 기준으로 ${items.value.length}명의 시작점을 저장할까요?\n` +
+    `${baseDate.value} 이후를 기준으로 했던 기존 시작점은 더 이상 적용되지 않습니다.`,
   )
   if (!ok) {
     return
@@ -98,7 +99,8 @@ onMounted(load)
     <div class="mb-4 rounded-md bg-surface p-3 text-muted">
       <p>기준일에 각 기사가 12일 주기의 <strong class="text-ink">몇 일차</strong>인지 입력합니다.
         (1~5 오전, 6 휴무, 7~11 오후, 12 휴무)</p>
-      <p>비워 둔 기사는 이번에 저장하지 않습니다. 저장한 시작점은 이력으로 쌓이고, 같은 기준일이면 나중에 입력한 값이 적용됩니다.</p>
+      <p>비워 둔 기사는 이번에 저장하지 않습니다. 새 시작점은 기준일부터 적용되고,
+        그 이후 날짜를 기준으로 했던 기존 시작점은 더 이상 적용되지 않습니다. (기록은 남습니다)</p>
     </div>
 
     <form @submit.prevent="onSubmit">

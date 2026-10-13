@@ -77,4 +77,27 @@ class DutyPatternTest {
         assertThatThrownBy(() -> DutyPattern.shiftOf(0)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> DutyPattern.shiftOf(13)).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void 과거_날짜로_재설정하면_그_이후의_기존_시작점을_덮어쓴다() {
+        List<DutyStart> starts = List.of(
+                new DutyStart(1L, "기사", oct(5), 10),  // 먼저 입력
+                new DutyStart(2L, "기사", oct(1), 2)    // 나중에 10/1 로 재설정
+        );
+
+        assertThat(DutyPattern.shiftOn(oct(3), starts)).contains(Shift.MORNING);    // 10/1=2 → 4일차
+        assertThat(DutyPattern.shiftOn(oct(7), starts)).contains(Shift.AFTERNOON);  // 10/1=2 → 8일차 (10/5 시작점이면 12일차 휴무)
+    }
+
+    @Test
+    void 나중에_입력한_미래_시작점은_그_기준일부터_적용된다() {
+        List<DutyStart> starts = List.of(
+                new DutyStart(1L, "기사", oct(1), 2),                     // 먼저 입력
+                new DutyStart(2L, "기사", LocalDate.of(2026, 11, 1), 5)   // 나중에 11/1 계획 입력
+        );
+
+        assertThat(DutyPattern.shiftOn(oct(31), starts)).contains(Shift.AFTERNOON);                   // 10/1=2 → 8일차
+        assertThat(DutyPattern.shiftOn(LocalDate.of(2026, 11, 1), starts)).contains(Shift.MORNING);  // 11/1=5 → 5일차
+        assertThat(DutyPattern.shiftOn(LocalDate.of(2026, 11, 2), starts)).contains(Shift.OFF);      // 6일차
+    }
 }

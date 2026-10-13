@@ -18,7 +18,7 @@
         SELECT ds.base_date, ds.cycle_day
         FROM hd_duty_start ds
         WHERE ds.employee_name = e.name
-        ORDER BY ds.base_date DESC, ds.id DESC
+        ORDER BY ds.id DESC
         LIMIT 1
         ) s ON true
         WHERE d.seniority_no IS NOT NULL
