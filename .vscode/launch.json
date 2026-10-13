@@ -6,7 +6,6 @@
       "name": "Backend (Spring Boot)",
       "request": "launch",
       "mainClass": "com.haedong.erp.BackendApplication",
-      "projectName": "backend",
       "cwd": "${workspaceFolder}/backend",
       "vmArgs": "-Xmx512m"
     }
