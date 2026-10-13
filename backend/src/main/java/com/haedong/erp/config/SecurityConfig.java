@@ -39,6 +39,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/employees/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/employees/**").hasRole("ADMIN")
+                        // 노선: 목록은 로그인한 누구나, 등록·수정·삭제는 관리자 이상
+                        .requestMatchers(HttpMethod.POST, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
