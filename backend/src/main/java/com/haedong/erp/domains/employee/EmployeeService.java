@@ -3,6 +3,7 @@ package com.haedong.erp.domains.employee;
 import com.haedong.erp.common.BusinessException;
 import com.haedong.erp.common.PageResponse;
 import com.haedong.erp.domains.auth.LoginUser;
+import com.haedong.erp.domains.duty.DutyService;
 import com.haedong.erp.domains.employee.dto.EmployeeBriefResponse;
 import com.haedong.erp.domains.employee.dto.EmployeeDetailResponse;
 import com.haedong.erp.domains.employee.dto.EmployeeRetireRequest;
@@ -21,6 +22,7 @@ import java.util.List;
 public class EmployeeService {
 
     private final EmployeeMapper employeeMapper;
+    private final DutyService dutyService;
 
     @Transactional(readOnly = true)
     public PageResponse<EmployeeSummaryResponse> search(EmployeeSearchRequest request) {
@@ -70,6 +72,7 @@ public class EmployeeService {
 
         if (!oldName.equals(employee.getName())) {
             employeeMapper.renameDriver(oldName, employee.getName());
+            dutyService.renameEmployee(oldName, employee.getName());
         }
         saveDriverInfo(employee.getName(), request);
     }
