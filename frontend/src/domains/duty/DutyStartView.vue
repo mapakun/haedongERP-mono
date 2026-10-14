@@ -5,6 +5,7 @@ import { getErrorMessage } from '@/shared/api/error'
 import { todayString } from '@/shared/utils/date'
 import { createDutyStarts, fetchDutyDrivers } from './duty.api'
 import { shiftLabel, shiftOfCycleDay, type DutyDriver, type DutyStartItem } from './duty.types'
+import DutyHistoryModal from './DutyHistoryModal.vue'
 
 const drivers = ref<DutyDriver[]>([])
 const baseDate = ref(todayString())
@@ -24,6 +25,8 @@ const items = computed<DutyStartItem[]>(() =>
     return typeof cycleDay === 'number' ? [{ employeeName: driver.name, cycleDay }] : []
   }),
 )
+
+const historyName = ref<string | null>(null)
 
 function isValidCycleDay(value: number): boolean {
   return Number.isInteger(value) && value >= 1 && value <= 12
@@ -136,7 +139,11 @@ onMounted(load)
           <tbody>
           <tr v-for="driver in drivers" :key="driver.name">
             <td>{{ driver.seniorityNo }}</td>
-            <td>{{ driver.name }}</td>
+            <td>
+              <button type="button" class="cursor-pointer hover:text-primary hover:underline" @click="historyName = driver.name">
+                {{ driver.name }}
+              </button>
+            </td>
             <td>
                 <span v-if="driver.latestBaseDate">
                   {{ driver.latestBaseDate }} = {{ driver.latestCycleDay }}일차
@@ -158,5 +165,6 @@ onMounted(load)
         </table>
       </div>
     </form>
+    <DutyHistoryModal :employee-name="historyName" @close="historyName = null" />
   </section>
 </template>

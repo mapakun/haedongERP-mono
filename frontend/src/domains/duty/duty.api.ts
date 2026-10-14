@@ -1,5 +1,5 @@
 import { http } from '@/shared/api/http'
-import type { DutyDriver, DutyRoster, DutyStartBulkRequest } from './duty.types'
+import type { DutyDriver, DutyRoster, DutyStartBulkRequest, DutyStartHistory } from './duty.types'
 
 export async function fetchDutyDrivers(): Promise<DutyDriver[]> {
   const { data } = await http.get<DutyDriver[]>('/duty/drivers')
@@ -14,5 +14,10 @@ export async function createDutyStarts(request: DutyStartBulkRequest): Promise<n
 
 export async function fetchDutyRoster(year: number, month: number): Promise<DutyRoster> {
   const { data } = await http.get<DutyRoster>('/duty/roster', { params: { year, month } })
+  return data
+}
+
+export async function fetchDutyStartHistory(employeeName: string): Promise<DutyStartHistory[]> {
+  const { data } = await http.get<DutyStartHistory[]>('/duty/starts', { params: { employeeName } })
   return data
 }

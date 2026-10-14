@@ -64,4 +64,18 @@
     <update id="renameOverrideLogs">
         UPDATE hd_duty_override_log SET employee_name = #{newName} WHERE employee_name = #{oldName}
     </update>
+
+    <!-- 한 기사의 시작점 이력 (최근 입력 순). 입력자 이름을 붙인다 -->
+    <select id="findStartHistory" resultType="com.haedong.erp.domains.duty.DutyStartHistoryRow">
+        SELECT s.id,
+        s.base_date,
+        s.cycle_day,
+        e.name AS created_by_name,
+        s.created_at
+        FROM hd_duty_start s
+        LEFT JOIN hd_employee e ON e.id = s.created_by
+        WHERE s.employee_name = #{employeeName}
+        ORDER BY s.id DESC
+    </select>
+
 </mapper>

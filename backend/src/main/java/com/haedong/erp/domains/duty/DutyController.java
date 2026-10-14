@@ -4,6 +4,7 @@ import com.haedong.erp.domains.auth.LoginUser;
 import com.haedong.erp.domains.duty.dto.DutyDriverResponse;
 import com.haedong.erp.domains.duty.dto.DutyRosterResponse;
 import com.haedong.erp.domains.duty.dto.DutyStartBulkRequest;
+import com.haedong.erp.domains.duty.dto.DutyStartHistoryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,11 @@ public class DutyController {
     @GetMapping("/roster")
     public DutyRosterResponse roster(@RequestParam int year, @RequestParam int month) {
         return dutyService.roster(year, month);
+    }
+
+    @GetMapping("/starts")
+    public List<DutyStartHistoryResponse> startHistory(@RequestParam String employeeName) {
+        return dutyService.startHistory(employeeName);
     }
 
     @PostMapping("/starts")

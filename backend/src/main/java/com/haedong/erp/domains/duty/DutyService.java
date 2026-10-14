@@ -3,11 +3,7 @@ package com.haedong.erp.domains.duty;
 import com.haedong.erp.common.BusinessException;
 import com.haedong.erp.common.NameNormalizer;
 import com.haedong.erp.domains.auth.LoginUser;
-import com.haedong.erp.domains.duty.dto.DutyCell;
-import com.haedong.erp.domains.duty.dto.DutyDriverResponse;
-import com.haedong.erp.domains.duty.dto.DutyRosterResponse;
-import com.haedong.erp.domains.duty.dto.DutyRosterRow;
-import com.haedong.erp.domains.duty.dto.DutyStartBulkRequest;
+import com.haedong.erp.domains.duty.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -55,6 +51,26 @@ public class DutyService {
                 .toList();
 
         return new DutyRosterResponse(year, month, yearMonth.lengthOfMonth(), rows);
+    }
+
+    /** 한 기사의 시작점 이력과 각 시작점의 적용 기간 (최근 입력 순) */
+    @Transactional(readOnly = true)
+    public List<DutyStartHistoryResponse> startHistory(String employeeName) {
+        String name = NameNormalizer.normalize(employeeName);
+        List<DutyStartHistoryRow> rows = dutyMapper.findStartHistory(name);
+        List<DutyStart> starts = rows.stream().map(row -> row.toStart(name)).toList();
+
+        return rows.stream()
+                .map(row -> {
+                    DutyStart start = row.toStart(name);
+                    boolean superseded = DutyPattern.isSuperseded(start, starts);
+                    LocalDate appliedUntil = superseded
+                            ? null
+                            : DutyPattern.appliedUntil(start, starts).orElse(null);
+                    return new DutyStartHistoryResponse(row.getId(), row.getBaseDate(), row.getCycleDay(),
+                            row.getCreatedByName(), row.getCreatedAt(), superseded, appliedUntil);
+                })
+                .toList();
     }
 
     /** 시작점 일괄 입력. 덮어쓰지 않고 이력으로 추가한다 */

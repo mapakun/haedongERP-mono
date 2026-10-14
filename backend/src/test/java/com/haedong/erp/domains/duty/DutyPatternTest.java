@@ -100,4 +100,29 @@ class DutyPatternTest {
         assertThat(DutyPattern.shiftOn(LocalDate.of(2026, 11, 1), starts)).contains(Shift.MORNING);  // 11/1=5 → 5일차
         assertThat(DutyPattern.shiftOn(LocalDate.of(2026, 11, 2), starts)).contains(Shift.OFF);      // 6일차
     }
+
+    @Test
+    void 나중에_입력한_미래_시작점이_있으면_그_전날까지_적용된다() {
+        DutyStart oct1 = new DutyStart(1L, "기사", oct(1), 2);
+        DutyStart nov1 = new DutyStart(2L, "기사", LocalDate.of(2026, 11, 1), 5);
+        List<DutyStart> starts = List.of(oct1, nov1);
+
+        assertThat(DutyPattern.isSuperseded(oct1, starts)).isFalse();
+        assertThat(DutyPattern.appliedUntil(oct1, starts)).contains(oct(31));
+        assertThat(DutyPattern.isSuperseded(nov1, starts)).isFalse();
+        assertThat(DutyPattern.appliedUntil(nov1, starts)).isEmpty();   // 계속 적용
+    }
+
+    @Test
+    void 과거로_재설정하면_그_이후의_기존_시작점은_덮어써진다() {
+        DutyStart oct1 = new DutyStart(1L, "기사", oct(1), 2);
+        DutyStart nov1 = new DutyStart(2L, "기사", LocalDate.of(2026, 11, 1), 5);
+        DutyStart reset = new DutyStart(3L, "기사", oct(1), 7);
+        List<DutyStart> starts = List.of(oct1, nov1, reset);
+
+        assertThat(DutyPattern.isSuperseded(oct1, starts)).isTrue();    // 같은 기준일에 나중 입력
+        assertThat(DutyPattern.isSuperseded(nov1, starts)).isTrue();    // 더 앞선 기준일에 나중 입력
+        assertThat(DutyPattern.isSuperseded(reset, starts)).isFalse();
+        assertThat(DutyPattern.appliedUntil(reset, starts)).isEmpty();
+    }
 }

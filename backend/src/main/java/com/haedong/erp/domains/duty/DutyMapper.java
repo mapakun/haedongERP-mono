@@ -31,4 +31,6 @@ public interface DutyMapper {
     void renameOverrides(@Param("oldName") String oldName, @Param("newName") String newName);
 
     void renameOverrideLogs(@Param("oldName") String oldName, @Param("newName") String newName);
+
+    List<DutyStartHistoryRow> findStartHistory(@Param("employeeName") String employeeName);
 }

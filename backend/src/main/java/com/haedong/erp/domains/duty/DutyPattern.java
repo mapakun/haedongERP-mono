@@ -60,4 +60,24 @@ public final class DutyPattern {
             throw new IllegalArgumentException("주기 일차는 1~12 이어야 합니다: " + cycleDay);
         }
     }
+
+    /** start 가 나중에 입력한 시작점에 완전히 덮어써졌는지: 나중 입력 중 기준일이 같거나 앞선 것이 있으면 */
+    public static boolean isSuperseded(DutyStart start, List<DutyStart> starts) {
+        return starts.stream()
+                .anyMatch(other -> other.getId() > start.getId()
+                        && !other.getBaseDate().isAfter(start.getBaseDate()));
+    }
+
+    /**
+     * start 가 적용되는 마지막 날. 나중 입력 중 기준일이 더 늦은 것이 있으면 그중 가장 빠른 기준일의 전날까지.
+     * 계속 적용되면 빈 값. (덮어써진 시작점에는 의미가 없다)
+     */
+    public static Optional<LocalDate> appliedUntil(DutyStart start, List<DutyStart> starts) {
+        return starts.stream()
+                .filter(other -> other.getId() > start.getId()
+                        && other.getBaseDate().isAfter(start.getBaseDate()))
+                .map(DutyStart::getBaseDate)
+                .min(Comparator.naturalOrder())
+                .map(date -> date.minusDays(1));
+    }
 }

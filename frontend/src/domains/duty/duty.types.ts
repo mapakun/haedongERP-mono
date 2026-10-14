@@ -66,3 +66,14 @@ export function shiftOfCycleDay(cycleDay: number): Shift {
   }
   return cycleDay <= 5 ? 'MORNING' : 'AFTERNOON'
 }
+
+/** superseded 면 나중 입력에 덮어써짐, 아니면 baseDate ~ appliedUntil 동안 적용 (null 이면 계속) */
+export interface DutyStartHistory {
+  id: number
+  baseDate: string
+  cycleDay: number
+  createdByName: string | null
+  createdAt: string
+  superseded: boolean
+  appliedUntil: string | null
+}

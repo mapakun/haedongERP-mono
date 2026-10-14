@@ -18,3 +18,18 @@ export function formatTime(value: string | null): string {
     hour12: false,
   })
 }
+
+/** '2026-10-14T13:20:00+09:00' → '2026. 10. 14. 13:20' */
+export function formatDateTime(value: string | null): string {
+  if (!value) {
+    return '-'
+  }
+  return new Date(value).toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}

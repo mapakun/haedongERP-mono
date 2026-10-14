@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { getErrorMessage } from '@/shared/api/error'
 import { todayString } from '@/shared/utils/date'
 import { fetchDutyRoster } from './duty.api'
+import DutyHistoryModal from './DutyHistoryModal.vue'
 import {
   shiftCellClass,
   shiftLabel,
@@ -42,6 +43,9 @@ const totals = computed(() =>
     ),
   })),
 )
+
+/** 이력 모달을 열 기사 이름 (null 이면 닫힘) */
+const historyName = ref<string | null>(null)
 
 async function load() {
   const [year, month] = yearMonth.value.split('-').map(Number)
@@ -128,7 +132,10 @@ function cellTitle(name: string, day: number, cell: DutyCell): string {
         <tbody>
         <tr v-for="row in roster.rows" :key="row.name">
           <td class="sticky left-0 z-10 border-b border-r border-line bg-surface px-3 py-1 whitespace-nowrap">
-            <span class="mr-1 text-muted">{{ row.seniorityNo }}</span>{{ row.name }}
+            <span class="mr-1 text-muted">{{ row.seniorityNo }}</span>
+            <button type="button" class="cursor-pointer hover:text-primary hover:underline" @click="historyName = row.name">
+              {{ row.name }}
+            </button>
           </td>
           <td v-for="(cell, index) in row.cells" :key="index" class="border-b border-line p-0.5">
             <div
@@ -162,5 +169,6 @@ function cellTitle(name: string, day: number, cell: DutyCell): string {
         </tfoot>
       </table>
     </div>
+    <DutyHistoryModal :employee-name="historyName" @close="historyName = null" />
   </section>
 </template>
