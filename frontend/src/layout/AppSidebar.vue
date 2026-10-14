@@ -12,7 +12,7 @@ const visibleItems = computed(() => menuItems.filter((item) => !item.adminOnly |
 <template>
   <nav class="flex flex-col bg-sidebar py-3">
     <RouterLink
-      v-for="item in menuItems"
+      v-for="item in visibleItems"
       :key="item.routeName"
       v-slot="{ href, navigate, isExactActive }"
       :to="{ name: item.routeName }"
