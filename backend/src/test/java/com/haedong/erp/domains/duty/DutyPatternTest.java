@@ -125,4 +125,15 @@ class DutyPatternTest {
         assertThat(DutyPattern.isSuperseded(reset, starts)).isFalse();
         assertThat(DutyPattern.appliedUntil(reset, starts)).isEmpty();
     }
+
+    @Test
+    void 날짜별로_적용되는_시작점을_찾는다() {
+        DutyStart oct1 = new DutyStart(1L, "기사", oct(1), 2);
+        DutyStart nov1 = new DutyStart(2L, "기사", LocalDate.of(2026, 11, 1), 5);
+        List<DutyStart> starts = List.of(oct1, nov1);
+
+        assertThat(DutyPattern.appliedStart(LocalDate.of(2026, 9, 30), starts)).isEmpty();
+        assertThat(DutyPattern.appliedStart(oct(31), starts)).contains(oct1);
+        assertThat(DutyPattern.appliedStart(LocalDate.of(2026, 11, 1), starts)).contains(nov1);
+    }
 }

@@ -37,10 +37,15 @@ export interface DutyStartBulkRequest {
   items: DutyStartItem[]
 }
 
-/** shift 가 null 이면 근무표 미설정 */
+/**
+ * shift 가 null 이면 근무표 미설정. overridden 이면 수동 수정한 칸.
+ * cycleDay 는 시작점으로 계산한 그날의 주기 일차, startChanged 면 이날부터 새 시작점
+ */
 export interface DutyCell {
   shift: Shift | null
   overridden: boolean
+  cycleDay: number | null
+  startChanged: boolean
 }
 
 export interface DutyRosterRow {

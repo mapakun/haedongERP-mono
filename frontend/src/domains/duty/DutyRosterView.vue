@@ -8,6 +8,7 @@ import DutyHistoryModal from './DutyHistoryModal.vue'
 import {
   shiftCellClass,
   shiftLabel,
+  shiftOfCycleDay,
   shiftShortLabel,
   type DutyCell,
   type DutyRoster,
@@ -79,9 +80,22 @@ function weekdayClass(weekday: number): string {
   return weekday === 6 ? 'text-primary' : ''
 }
 
+/** 칸에 마우스를 올렸을 때 설명 */
 function cellTitle(name: string, day: number, cell: DutyCell): string {
-  const label = cell.shift ? shiftLabel[cell.shift] : '미설정'
-  return `${name} ${day}일 ${label}${cell.overridden ? ' (수동 수정)' : ''}`
+  if (!cell.shift) {
+    return `${name} ${day}일 미설정`
+  }
+  const parts = [`${name} ${day}일 ${shiftLabel[cell.shift]}`]
+  if (cell.cycleDay) {
+    parts.push(`(${cell.cycleDay}일차)`)
+  }
+  if (cell.overridden && cell.cycleDay) {
+    parts.push(`· 수동 수정 (패턴: ${shiftLabel[shiftOfCycleDay(cell.cycleDay)]})`)
+  }
+  if (cell.startChanged) {
+    parts.push('· 이날부터 새 시작점')
+  }
+  return parts.join(' ')
 }
 </script>
 
@@ -102,6 +116,7 @@ function cellTitle(name: string, day: number, cell: DutyCell): string {
           {{ shiftShortLabel[shift] }} = {{ shiftLabel[shift] }}
         </span>
         <span class="rounded px-2 py-1 text-muted">· = 미설정</span>
+        <span class="rounded border-l-3 border-l-primary px-2 py-1 text-muted">시작점 변경</span>
       </div>
     </div>
 
@@ -143,6 +158,7 @@ function cellTitle(name: string, day: number, cell: DutyCell): string {
               :class="[
                   cell.shift ? shiftCellClass[cell.shift] : 'text-muted',
                   { 'outline-2 -outline-offset-2 outline-ink': cell.overridden },
+                  { 'border-l-3 border-l-primary': cell.startChanged },
                 ]"
               :title="cellTitle(row.name, index + 1, cell)"
             >

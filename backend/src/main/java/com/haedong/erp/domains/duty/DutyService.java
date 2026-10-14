@@ -11,10 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -113,18 +110,36 @@ public class DutyService {
         dutyMapper.renameOverrideLogs(oldName, newName);
     }
 
-    /** 날짜별 근무: ① 수동 수정 → ② 시작점으로 계산한 패턴 → ③ 미설정(null) */
+    /**
+     * 날짜별 근무: ① 수동 수정 → ② 시작점으로 계산한 패턴 → ③ 미설정(null)
+     * 전날과 적용 시작점이 다르면 "시작점 변경일"로 표시한다.
+     */
     private List<DutyCell> cells(LocalDate from, LocalDate to,
                                  List<DutyStart> starts, Map<LocalDate, Shift> overrides) {
-        return from.datesUntil(to.plusDays(1))
-                .map(date -> {
-                    Shift overridden = overrides.get(date);
-                    if (overridden != null) {
-                        return new DutyCell(overridden, true);
-                    }
-                    return new DutyCell(DutyPattern.shiftOn(date, starts).orElse(null), false);
-                })
-                .toList();
+        List<DutyCell> cells = new ArrayList<>();
+        // 1일의 변경 여부를 알려면 전달 말일의 적용 시작점부터 알아야 한다
+        Optional<DutyStart> previous = DutyPattern.appliedStart(from.minusDays(1), starts);
+
+        for (LocalDate date : from.datesUntil(to.plusDays(1)).toList()) {
+            Optional<DutyStart> applied = DutyPattern.appliedStart(date, starts);
+
+            Integer cycleDay = applied
+                    .map(start -> DutyPattern.cycleDayOf(start.getBaseDate(), start.getCycleDay(), date))
+                    .orElse(null);
+            Shift patternShift = cycleDay == null ? null : DutyPattern.shiftOf(cycleDay);
+            boolean startChanged = applied.isPresent()
+                    && !applied.map(DutyStart::getId).equals(previous.map(DutyStart::getId));
+
+            Shift overridden = overrides.get(date);
+            cells.add(new DutyCell(
+                    overridden != null ? overridden : patternShift,
+                    overridden != null,
+                    cycleDay,
+                    startChanged));
+
+            previous = applied;
+        }
+        return cells;
     }
 
     private static YearMonth toYearMonth(int year, int month) {
