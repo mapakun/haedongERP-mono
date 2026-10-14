@@ -4,6 +4,7 @@ import { authRoutes } from '@/domains/auth/auth.routes'
 import { mainRoutes } from '@/domains/main/main.routes'
 import AppLayout from '@/layout/AppLayout.vue'
 import { employeeRoutes } from '@/domains/employee/employee.routes'
+import { dutyRoutes } from '@/domains/duty/duty.routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,7 +12,7 @@ const router = createRouter({
     {
       path: '/',
       component: AppLayout,
-      children: [...mainRoutes, ...employeeRoutes],
+      children: [...mainRoutes, ...employeeRoutes, ...dutyRoutes],
     },
     ],
 })
@@ -27,7 +28,16 @@ router.beforeEach(async (to) => {
     return auth.isLoggedIn && to.name === 'login' ? { name: 'main' } : true
   }
 
-  return auth.isLoggedIn ? true : { name: 'login', query: { redirect: to.fullPath } }
+  if (!auth.isLoggedIn) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  // 관리자 전용 화면: 일반 사용자는 홈으로
+  if (to.meta.adminOnly && !auth.isAdmin) {
+    return { name: 'main' }
+  }
+
+  return true
 })
 
 export default router

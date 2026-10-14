@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.duty.DutyMapper">
+
+    <!-- ========== 전속기사 ========== -->
+
+    <!-- 전속기사 = 서열이 있는 재직 기사. 기사마다 "기준일이 가장 늦은(같으면 나중에 입력한)" 시작점을 붙인다 -->
+    <select id="findDrivers" resultType="com.haedong.erp.domains.duty.dto.DutyDriverResponse">
+        SELECT e.name,
+        d.seniority_no,
+        s.base_date AS latest_base_date,
+        s.cycle_day AS latest_cycle_day
+        FROM hd_driver d
+        JOIN hd_employee e ON e.name = d.employee_name
+        LEFT JOIN LATERAL (
+        SELECT ds.base_date, ds.cycle_day
+        FROM hd_duty_start ds
+        WHERE ds.employee_name = e.name
+        ORDER BY ds.id DESC
+        LIMIT 1
+        ) s ON true
+        WHERE d.seniority_no IS NOT NULL
+        AND e.retired_at IS NULL
+        ORDER BY d.seniority_no
+    </select>
+
+    <!-- ========== 시작점 ========== -->
+
+    <select id="findStartsUntil" resultType="com.haedong.erp.domains.duty.DutyStart">
+        SELECT id, employee_name, base_date, cycle_day
+        FROM hd_duty_start
+        WHERE base_date &lt;= #{toDate}
+    </select>
+
+    <!-- 여러 줄을 INSERT 한 번으로 넣는다 -->
+    <insert id="insertStarts">
+        INSERT INTO hd_duty_start (employee_name, base_date, cycle_day, created_by)
+        VALUES
+        <foreach collection="items" item="item" separator=",">
+            (#{item.employeeName}, #{baseDate}, #{item.cycleDay}, #{createdBy})
+        </foreach>
+    </insert>
+
+    <!-- ========== 수동 수정 ========== -->
+
+    <select id="findOverrides" resultType="com.haedong.erp.domains.duty.DutyOverride">
+        SELECT employee_name, work_date, shift
+        FROM hd_duty_override
+        WHERE work_date BETWEEN #{fromDate} AND #{toDate}
+    </select>
+
+    <!-- ========== 이름 변경 ========== -->
+
+    <update id="renameStarts">
+        UPDATE hd_duty_start SET employee_name = #{newName} WHERE employee_name = #{oldName}
+    </update>
+
+    <update id="renameOverrides">
+        UPDATE hd_duty_override SET employee_name = #{newName} WHERE employee_name = #{oldName}
+    </update>
+
+    <update id="renameOverrideLogs">
+        UPDATE hd_duty_override_log SET employee_name = #{newName} WHERE employee_name = #{oldName}
+    </update>
+
+    <!-- 한 기사의 시작점 이력 (최근 입력 순). 입력자 이름을 붙인다 -->
+    <select id="findStartHistory" resultType="com.haedong.erp.domains.duty.DutyStartHistoryRow">
+        SELECT s.id,
+        s.base_date,
+        s.cycle_day,
+        e.name AS created_by_name,
+        s.created_at
+        FROM hd_duty_start s
+        LEFT JOIN hd_employee e ON e.id = s.created_by
+        WHERE s.employee_name = #{employeeName}
+        ORDER BY s.id DESC
+    </select>
+
+</mapper>

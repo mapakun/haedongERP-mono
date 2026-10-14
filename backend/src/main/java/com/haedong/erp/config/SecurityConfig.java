@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/routes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
+                        // 근무표: 지금은 관리자 이상만 (기사 본인 조회는 3단계에서 따로 연다)
+                        .requestMatchers("/api/duty/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception

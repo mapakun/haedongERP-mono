@@ -1,11 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useAuthStore } from '@/domains/auth/auth.store'
 import { menuItems } from './menu'
+
+const auth = useAuthStore()
+
+// 관리자 전용 메뉴는 관리자 이상에게만 보인다
+const visibleItems = computed(() => menuItems.filter((item) => !item.adminOnly || auth.isAdmin))
 </script>
 
 <template>
   <nav class="flex flex-col bg-sidebar py-3">
     <RouterLink
-      v-for="item in menuItems"
+      v-for="item in visibleItems"
       :key="item.routeName"
       v-slot="{ href, navigate, isExactActive }"
       :to="{ name: item.routeName }"
