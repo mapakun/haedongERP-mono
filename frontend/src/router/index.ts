@@ -5,6 +5,7 @@ import { mainRoutes } from '@/domains/main/main.routes'
 import AppLayout from '@/layout/AppLayout.vue'
 import { employeeRoutes } from '@/domains/employee/employee.routes'
 import { dutyRoutes } from '@/domains/duty/duty.routes'
+import { routeRoutes } from '@/domains/route/route.routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,7 +13,7 @@ const router = createRouter({
     {
       path: '/',
       component: AppLayout,
-      children: [...mainRoutes, ...employeeRoutes, ...dutyRoutes],
+      children: [...mainRoutes, ...employeeRoutes, ...dutyRoutes, ...routeRoutes],
     },
     ],
 })
