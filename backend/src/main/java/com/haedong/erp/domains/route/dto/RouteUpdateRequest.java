@@ -1,4 +1,4 @@
-package com.haedong.erp.domains.route;
+package com.haedong.erp.domains.route.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

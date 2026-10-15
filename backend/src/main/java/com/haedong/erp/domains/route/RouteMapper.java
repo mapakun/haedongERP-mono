@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.haedong.erp.domains.route.dto.RouteResponse;
+
 @Mapper 
 public interface RouteMapper {
     List<RouteResponse> findAll();
