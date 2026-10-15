@@ -39,6 +39,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/employees/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/employees/**").hasRole("ADMIN")
+                        // 노선: 목록은 로그인한 누구나, 등록·수정·삭제는 관리자 이상
+                        .requestMatchers(HttpMethod.POST, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
+                        // 차량: 목록은 로그인한 누구나, 등록·배정 변경·삭제는 관리자 이상
+                        .requestMatchers(HttpMethod.POST, "/api/vehicles/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/vehicles/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/vehicles/**").hasRole("ADMIN")
                         // 근무표: 지금은 관리자 이상만 (기사 본인 조회는 3단계에서 따로 연다)
                         .requestMatchers("/api/duty/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

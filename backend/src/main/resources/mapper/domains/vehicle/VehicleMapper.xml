@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.vehicle.VehicleMapper">
+
+    <!-- 노선 → 슬롯 → 차량번호 순. 예비 차량과 슬롯 미배정 차량은 뒤로 -->
+    <select id="findAll" resultType="com.haedong.erp.domains.vehicle.dto.VehicleResponse">
+        SELECT vehicle_no, route_no, slot_no
+        FROM hd_vehicle
+        <where>
+            <if test="routeNo != null and routeNo != ''">
+                AND route_no = #{routeNo}
+            </if>
+            <if test="spareOnly">
+                AND route_no IS NULL
+            </if>
+        </where>
+        ORDER BY route_no NULLS LAST, slot_no NULLS LAST, vehicle_no
+    </select>
+
+    <select id="findByVehicleNo" resultType="com.haedong.erp.domains.vehicle.dto.VehicleResponse">
+        SELECT vehicle_no, route_no, slot_no
+        FROM hd_vehicle
+        WHERE vehicle_no = #{vehicleNo}
+    </select>
+
+    <select id="existsByVehicleNo" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM hd_vehicle WHERE vehicle_no = #{vehicleNo})
+    </select>
+
+    <!-- 배정 검사 동안 같은 노선에 대한 다른 배정·슬롯 수 변경·삭제를 기다리게 한다 (RouteService 와 같은 행 잠금) -->
+    <select id="lockRouteTotalSlots" resultType="java.lang.Integer">
+        SELECT total_slots
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+        FOR UPDATE
+    </select>
+
+    <select id="countByRoute" resultType="int">
+        SELECT COUNT(*)
+        FROM hd_vehicle
+        WHERE route_no = #{routeNo}
+    </select>
+
+    <select id="findVehicleNoBySlot" resultType="string">
+        SELECT vehicle_no
+        FROM hd_vehicle
+        WHERE route_no = #{routeNo}
+        AND slot_no = #{slotNo}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO hd_vehicle (vehicle_no, route_no, slot_no)
+        VALUES (#{vehicleNo}, #{routeNo}, #{slotNo})
+    </insert>
+
+    <update id="updateAssignment">
+        UPDATE hd_vehicle
+        SET route_no   = #{routeNo},
+        slot_no    = #{slotNo},
+        updated_at = now()
+        WHERE vehicle_no = #{vehicleNo}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM hd_vehicle
+        WHERE vehicle_no = #{vehicleNo}
+    </delete>
+
+</mapper>

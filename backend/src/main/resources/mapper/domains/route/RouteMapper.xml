@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.route.RouteMapper">
+
+    <!-- 노선별 배정 차량 수를 함께 센다 (차량이 없는 노선도 나오도록 LEFT JOIN) -->
+    <select id="findAll" resultType="com.haedong.erp.domains.route.dto.RouteResponse">
+        SELECT r.route_no,
+               r.total_slots,
+               COUNT(v.vehicle_no) AS assigned_count
+        FROM hd_route r
+        LEFT JOIN hd_vehicle v ON v.route_no = r.route_no
+        GROUP BY r.route_no, r.total_slots
+        ORDER BY r.route_no
+    </select>
+
+    <select id="existsByRouteNo" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM hd_route WHERE route_no = #{routeNo})
+    </select>
+
+    <!-- 집계(GROUP BY)와 FOR UPDATE 는 함께 쓸 수 없어서 잠금 전용 쿼리를 따로 둔다 -->
+    <select id="lockByRouteNo" resultType="string">
+        SELECT route_no
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+        FOR UPDATE
+    </select>
+
+    <select id="countVehicles" resultType="int">
+        SELECT COUNT(*)
+        FROM hd_vehicle
+        WHERE route_no = #{routeNo}
+    </select>
+
+    <select id="findMaxSlotNo" resultType="java.lang.Integer">
+        SELECT MAX(slot_no)
+        FROM hd_vehicle
+        WHERE route_no = #{routeNo}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO hd_route (route_no, total_slots)
+        VALUES (#{routeNo}, #{totalSlots})
+    </insert>
+
+    <update id="updateTotalSlots">
+        UPDATE hd_route
+        SET total_slots = #{totalSlots},
+            updated_at  = now()
+        WHERE route_no = #{routeNo}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM hd_route
+        WHERE route_no = #{routeNo}
+    </delete>
+
+</mapper>
