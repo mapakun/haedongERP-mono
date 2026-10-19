@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.dispatch.DispatchMapper">
+
+    <select id="findRoutes" resultType="com.haedong.erp.domains.dispatch.DispatchRoute">
+        SELECT route_no, total_slots, base_date
+        FROM hd_route
+        <where>
+            <if test="routeNo != null">
+                route_no = #{routeNo}
+            </if>
+        </where>
+        ORDER BY route_no
+    </select>
+
+    <!-- 슬롯이 비어 있는 차량(노선만 있는 차량, 예비 차량)은 순위표에 나오지 않는다 -->
+    <select id="findSlots" resultType="com.haedong.erp.domains.dispatch.DispatchSlot">
+        SELECT route_no, slot_no, vehicle_no
+        FROM hd_vehicle
+        WHERE slot_no IS NOT NULL
+        <if test="routeNo != null">
+            AND route_no = #{routeNo}
+        </if>
+    </select>
+
+    <select id="findRotations" resultType="com.haedong.erp.domains.dispatch.RouteRotation">
+        SELECT route_no, effective_from, daily_rotation, monthly_rotation, created_by, created_at
+        FROM hd_route_rotation
+        <where>
+            <if test="routeNo != null">
+                route_no = #{routeNo}
+            </if>
+        </where>
+        ORDER BY route_no, effective_from
+    </select>
+
+</mapper>
