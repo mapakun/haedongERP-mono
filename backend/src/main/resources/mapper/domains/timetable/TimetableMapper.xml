@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.timetable.TimetableMapper">
+
+    <sql id="columns">
+        route_no, day_type, slot_no, trip_no, shift,
+        depart_min, mid1_min, mid2_min, turn_min, mid3_min, mid4_min, arrive_min
+    </sql>
+
+    <select id="search" resultType="com.haedong.erp.domains.timetable.dto.TimetableRowResponse">
+        SELECT <include refid="columns"/>
+        FROM hd_timetable
+        <where>
+            route_no = #{routeNo}
+            AND day_type = #{dayType}
+            <if test="shift != null">
+                AND shift = #{shift}
+            </if>
+            <if test="slotNo != null">
+                AND slot_no = #{slotNo}
+            </if>
+        </where>
+        ORDER BY slot_no, trip_no
+    </select>
+
+    <select id="exists" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM hd_timetable
+            WHERE route_no = #{routeNo} AND day_type = #{dayType}
+              AND slot_no = #{slotNo} AND trip_no = #{tripNo}
+        )
+    </select>
+
+    <select id="lockRouteTotalSlots" resultType="int">
+        SELECT total_slots
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+        FOR UPDATE
+    </select>
+
+    <insert id="insert">
+        INSERT INTO hd_timetable (<include refid="columns"/>)
+        VALUES (#{routeNo}, #{dayType}, #{slotNo}, #{tripNo}, #{shift},
+                #{departMin}, #{mid1Min}, #{mid2Min}, #{turnMin}, #{mid3Min}, #{mid4Min}, #{arriveMin})
+    </insert>
+
+    <update id="update">
+        UPDATE hd_timetable
+        SET shift      = #{v.shift},
+            depart_min = #{v.departMin},
+            mid1_min   = #{v.mid1Min},
+            mid2_min   = #{v.mid2Min},
+            turn_min   = #{v.turnMin},
+            mid3_min   = #{v.mid3Min},
+            mid4_min   = #{v.mid4Min},
+            arrive_min = #{v.arriveMin},
+            updated_at = now()
+        WHERE route_no = #{routeNo} AND day_type = #{dayType}
+          AND slot_no = #{slotNo} AND trip_no = #{tripNo}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM hd_timetable
+        WHERE route_no = #{routeNo} AND day_type = #{dayType}
+          AND slot_no = #{slotNo} AND trip_no = #{tripNo}
+    </delete>
+
+    <select id="countByRouteAndDayType" resultType="int">
+        SELECT COUNT(*)
+        FROM hd_timetable
+        WHERE route_no = #{routeNo} AND day_type = #{dayType}
+    </select>
+
+    <delete id="deleteByRouteAndDayType">
+        DELETE FROM hd_timetable
+        WHERE route_no = #{routeNo} AND day_type = #{dayType}
+    </delete>
+
+    <!-- 형태 값만 바꿔서 그대로 복사한다 (SELECT 의 두 번째 값이 새 형태) -->
+    <insert id="copyDayType">
+        INSERT INTO hd_timetable (<include refid="columns"/>)
+        SELECT route_no, #{toDayType}, slot_no, trip_no, shift,
+               depart_min, mid1_min, mid2_min, turn_min, mid3_min, mid4_min, arrive_min
+        FROM hd_timetable
+        WHERE route_no = #{routeNo} AND day_type = #{fromDayType}
+    </insert>
+
+</mapper>

@@ -47,6 +47,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/vehicles/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/vehicles/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/vehicles/**").hasRole("ADMIN")
+                        // 시간표·장소 이름: 조회는 로그인한 누구나, 추가·수정·삭제·복사는 관리자 이상
+                        .requestMatchers(HttpMethod.POST, "/api/timetables/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/timetables/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/timetables/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/route-points/**").hasRole("ADMIN")
                         // 근무표: 지금은 관리자 이상만 (기사 본인 조회는 3단계에서 따로 연다)
                         .requestMatchers("/api/duty/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

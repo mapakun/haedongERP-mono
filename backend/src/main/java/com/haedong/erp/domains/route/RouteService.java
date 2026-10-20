@@ -60,6 +60,12 @@ public class RouteService {
             throw new BusinessException(HttpStatus.CONFLICT,
                     "차량이 배정된 노선은 삭제할 수 없습니다. 차량을 다른 노선으로 옮기거나 예비 차량으로 바꿔 주세요.");
         }
+
+        if (routeMapper.countTimetables(routeNo) > 0) {
+            throw new BusinessException(HttpStatus.CONFLICT,
+                    "시간표가 등록된 노선은 삭제할 수 없습니다. 시간표를 먼저 삭제해 주세요.");
+        }
+        
         routeMapper.delete(routeNo);
     }
 

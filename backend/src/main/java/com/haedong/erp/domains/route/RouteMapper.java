@@ -19,6 +19,8 @@ public interface RouteMapper {
 
     int countVehicles(String routeNo);
 
+    int countTimetables(String routeNo);
+
     /** 이 노선에서 사용 중인 가장 큰 슬롯 번호 (사용 중인 슬롯이 없으면 null) */
     Integer findMaxSlotNo(String routeNo);
 

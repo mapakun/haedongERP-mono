@@ -33,6 +33,12 @@
         WHERE route_no = #{routeNo}
     </select>
 
+    <select id="countTimetables" resultType="int">
+        SELECT COUNT(*)
+        FROM hd_timetable
+        WHERE route_no = #{routeNo}
+    </select>
+
     <select id="findMaxSlotNo" resultType="java.lang.Integer">
         SELECT MAX(slot_no)
         FROM hd_vehicle
