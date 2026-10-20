@@ -77,3 +77,35 @@ export interface TimetableSearchParams {
   shift?: TripShift
   slotNo?: number
 }
+
+
+/** 시각 열의 속성 이름 (departMin, mid1Min ...) */
+export type TimeField = TimeColumn['field']
+
+/** 회차 수정 요청 (백엔드 TimetableUpdateRequest) */
+export interface TimetableUpdateRequest {
+  shift: TripShift
+  departMin: number
+  mid1Min: number | null
+  mid2Min: number | null
+  turnMin: number
+  mid3Min: number | null
+  mid4Min: number | null
+  arriveMin: number
+}
+
+/** 회차 추가 요청 (백엔드 TimetableCreateRequest). 어느 칸인지 + 값 */
+export interface TimetableCreateRequest extends TimetableUpdateRequest {
+  routeNo: string
+  dayType: DayType
+  slotNo: number
+  tripNo: number
+}
+
+/** 회차 한 칸을 가리키는 위치 (TimetableRow 도 이 모양을 갖고 있다) */
+export interface TimetableKey {
+  routeNo: string
+  dayType: DayType
+  slotNo: number
+  tripNo: number
+}

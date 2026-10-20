@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/domains/auth/auth.store'
 import { getRoutes } from '@/domains/route/route.api'
 import type { RouteSummary } from '@/domains/route/route.types'
 import { getErrorMessage } from '@/shared/api/error'
 import { formatMinutes } from '@/shared/utils/format'
+import TimetableFormModal from './TimetableFormModal.vue'
 import { getRoutePoints, getTimetable } from './timetable.api'
 import {
   dayTypeLabel,
@@ -16,6 +18,8 @@ import {
   type TripShift,
 } from './timetable.types'
 
+const auth = useAuthStore()
+
 const routes = ref<RouteSummary[]>([])
 const routeNo = ref('')
 const dayType = ref<DayType>('WEEKDAY')
@@ -26,6 +30,9 @@ const rows = ref<TimetableRow[]>([])
 const pointNames = ref<Partial<Record<PointKey, string>>>({})
 const loading = ref(false)
 const errorMessage = ref('')
+
+const modalOpen = ref(false)
+const editing = ref<TimetableRow | null>(null)
 
 /** 요청이 겹칠 때 늦게 도착한 옛 응답이 화면을 덮어쓰지 않도록 번호를 매긴다 */
 let requestSeq = 0
@@ -84,6 +91,24 @@ const groups = computed(() => {
   return [...bySlot.entries()].map(([slot, list]) => ({ slot, rows: list }))
 })
 
+function openCreate() {
+  editing.value = null
+  modalOpen.value = true
+}
+
+function openEdit(row: TimetableRow) {
+  if (!auth.isAdmin) {
+    return
+  }
+  editing.value = row
+  modalOpen.value = true
+}
+
+function onSaved() {
+  modalOpen.value = false
+  load()
+}
+
 onMounted(async () => {
   try {
     routes.value = await getRoutes()
@@ -100,6 +125,9 @@ onMounted(async () => {
   <section>
     <div class="mb-4 flex items-center justify-between gap-2">
       <h2 class="text-xl font-bold">시간표</h2>
+      <button v-if="auth.isAdmin" type="button" class="btn btn-primary" @click="openCreate">
+        + 회차 추가
+      </button>
     </div>
 
     <form class="mb-4 flex flex-wrap items-center gap-2" @submit.prevent="load">
@@ -131,6 +159,7 @@ onMounted(async () => {
     <template v-else>
       <p class="mb-2 text-muted">
         {{ groups.length }}개 순번, {{ rows.length }}회차
+        <span v-if="auth.isAdmin">· 행을 누르면 수정할 수 있습니다</span>
       </p>
 
       <div class="overflow-x-auto rounded-md border border-line bg-surface">
@@ -146,7 +175,12 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody v-for="group in groups" :key="group.slot" class="border-b-2 border-line">
-            <tr v-for="(row, index) in group.rows" :key="row.tripNo">
+            <tr
+              v-for="(row, index) in group.rows"
+              :key="row.tripNo"
+              :class="{ 'cursor-pointer': auth.isAdmin }"
+              @click="openEdit(row)"
+            >
               <td
                 v-if="index === 0"
                 :rowspan="group.rows.length"
@@ -173,5 +207,16 @@ onMounted(async () => {
         </table>
       </div>
     </template>
+
+    <TimetableFormModal
+      v-if="auth.isAdmin"
+      :open="modalOpen"
+      :target="editing"
+      :route-no="routeNo"
+      :day-type="dayType"
+      :point-names="pointNames"
+      @close="modalOpen = false"
+      @saved="onSaved"
+    />
   </section>
 </template>

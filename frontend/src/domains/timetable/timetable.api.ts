@@ -1,5 +1,12 @@
 import { http } from '@/shared/api/http'
-import type { RoutePoint, TimetableRow, TimetableSearchParams } from './timetable.types'
+import type {
+  RoutePoint,
+  TimetableCreateRequest,
+  TimetableKey,
+  TimetableRow,
+  TimetableSearchParams,
+  TimetableUpdateRequest,
+} from './timetable.types'
 
 /** 노선+형태는 필수. 오전/오후와 순번을 주면 그 기사가 탈 회차만 돌아온다 */
 export async function getTimetable(params: TimetableSearchParams): Promise<TimetableRow[]> {
@@ -11,4 +18,19 @@ export async function getTimetable(params: TimetableSearchParams): Promise<Timet
 export async function getRoutePoints(routeNo: string): Promise<RoutePoint[]> {
   const { data } = await http.get<RoutePoint[]>(`/route-points/${routeNo}`)
   return data
+}
+
+export async function createTimetableRow(request: TimetableCreateRequest): Promise<void> {
+  await http.post('/timetables', request)
+}
+
+export async function updateTimetableRow(
+  key: TimetableKey,
+  request: TimetableUpdateRequest,
+): Promise<void> {
+  await http.put(`/timetables/${key.routeNo}/${key.dayType}/${key.slotNo}/${key.tripNo}`, request)
+}
+
+export async function deleteTimetableRow(key: TimetableKey): Promise<void> {
+  await http.delete(`/timetables/${key.routeNo}/${key.dayType}/${key.slotNo}/${key.tripNo}`)
 }

@@ -22,3 +22,17 @@ export function formatMinutes(minutes: number | null): string {
   const minute = minutes % 60
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
+
+
+/** "HH:MM"을 0시부터의 분으로 바꾼다. 24:10 처럼 자정 이후(47:59까지)도 받는다. 형식이 틀리면 null */
+export function parseTime(text: string): number | null {
+  const match = /^(\d{1,2}):([0-5]\d)$/.exec(text.trim())
+  if (!match) {
+    return null
+  }
+  const hour = Number(match[1])
+  if (hour > 47) {
+    return null
+  }
+  return hour * 60 + Number(match[2])
+}
