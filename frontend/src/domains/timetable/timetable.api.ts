@@ -1,6 +1,7 @@
 import { http } from '@/shared/api/http'
 import type {
   RoutePoint,
+  TimetableCopyRequest,
   TimetableCreateRequest,
   TimetableKey,
   TimetableRow,
@@ -33,4 +34,15 @@ export async function updateTimetableRow(
 
 export async function deleteTimetableRow(key: TimetableKey): Promise<void> {
   await http.delete(`/timetables/${key.routeNo}/${key.dayType}/${key.slotNo}/${key.tripNo}`)
+}
+
+/** 같은 노선 안에서 한 형태의 시간표를 다른 형태로 복사하고, 복사된 행 수를 돌려준다 */
+export async function copyTimetable(request: TimetableCopyRequest): Promise<number> {
+  const { data } = await http.post<{ copied: number }>('/timetables/copy', request)
+  return data.copied
+}
+
+/** 노선의 장소 이름을 통째로 저장한다. 이름이 비어 있는 위치는 지워진다 */
+export async function saveRoutePoints(routeNo: string, points: RoutePoint[]): Promise<void> {
+  await http.put(`/route-points/${routeNo}`, { points })
 }

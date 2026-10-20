@@ -5,6 +5,8 @@ import { getRoutes } from '@/domains/route/route.api'
 import type { RouteSummary } from '@/domains/route/route.types'
 import { getErrorMessage } from '@/shared/api/error'
 import { formatMinutes } from '@/shared/utils/format'
+import RoutePointModal from './RoutePointModal.vue'
+import TimetableCopyModal from './TimetableCopyModal.vue'
 import TimetableFormModal from './TimetableFormModal.vue'
 import { getRoutePoints, getTimetable } from './timetable.api'
 import {
@@ -33,6 +35,8 @@ const errorMessage = ref('')
 
 const modalOpen = ref(false)
 const editing = ref<TimetableRow | null>(null)
+const copyOpen = ref(false)
+const pointOpen = ref(false)
 
 /** 요청이 겹칠 때 늦게 도착한 옛 응답이 화면을 덮어쓰지 않도록 번호를 매긴다 */
 let requestSeq = 0
@@ -109,6 +113,18 @@ function onSaved() {
   load()
 }
 
+/** 복사가 끝나면 복사된 형태로 화면을 옮겨서 결과를 바로 보여 준다 */
+function onCopied(toDayType: DayType) {
+  copyOpen.value = false
+  dayType.value = toDayType
+  load()
+}
+
+function onPointsSaved() {
+  pointOpen.value = false
+  load()
+}
+
 onMounted(async () => {
   try {
     routes.value = await getRoutes()
@@ -123,11 +139,13 @@ onMounted(async () => {
 
 <template>
   <section>
-    <div class="mb-4 flex items-center justify-between gap-2">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-xl font-bold">시간표</h2>
-      <button v-if="auth.isAdmin" type="button" class="btn btn-primary" @click="openCreate">
-        + 회차 추가
-      </button>
+      <div v-if="auth.isAdmin" class="flex flex-wrap gap-2">
+        <button type="button" class="btn" @click="pointOpen = true">장소 이름</button>
+        <button type="button" class="btn" @click="copyOpen = true">형태 복사</button>
+        <button type="button" class="btn btn-primary" @click="openCreate">+ 회차 추가</button>
+      </div>
     </div>
 
     <form class="mb-4 flex flex-wrap items-center gap-2" @submit.prevent="load">
@@ -208,15 +226,30 @@ onMounted(async () => {
       </div>
     </template>
 
-    <TimetableFormModal
-      v-if="auth.isAdmin"
-      :open="modalOpen"
-      :target="editing"
-      :route-no="routeNo"
-      :day-type="dayType"
-      :point-names="pointNames"
-      @close="modalOpen = false"
-      @saved="onSaved"
-    />
+    <template v-if="auth.isAdmin">
+      <TimetableFormModal
+        :open="modalOpen"
+        :target="editing"
+        :route-no="routeNo"
+        :day-type="dayType"
+        :point-names="pointNames"
+        @close="modalOpen = false"
+        @saved="onSaved"
+      />
+      <TimetableCopyModal
+        :open="copyOpen"
+        :route-no="routeNo"
+        :from-day-type="dayType"
+        @close="copyOpen = false"
+        @copied="onCopied"
+      />
+      <RoutePointModal
+        :open="pointOpen"
+        :route-no="routeNo"
+        :point-names="pointNames"
+        @close="pointOpen = false"
+        @saved="onPointsSaved"
+      />
+    </template>
   </section>
 </template>

@@ -109,3 +109,13 @@ export interface TimetableKey {
   slotNo: number
   tripNo: number
 }
+
+
+/** 형태 복사 요청 (백엔드 TimetableCopyRequest) */
+export interface TimetableCopyRequest {
+  routeNo: string
+  fromDayType: DayType
+  toDayType: DayType
+  /** true 면 대상 형태에 이미 있는 시간표를 지우고 덮어쓴다 */
+  overwrite: boolean
+}
