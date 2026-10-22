@@ -7,11 +7,12 @@
     <!-- 노선별 배정 차량 수를 함께 센다 (차량이 없는 노선도 나오도록 LEFT JOIN) -->
     <select id="findAll" resultType="com.haedong.erp.domains.route.dto.RouteResponse">
         SELECT r.route_no,
-               r.total_slots,
-               COUNT(v.vehicle_no) AS assigned_count
+        r.total_slots,
+        r.base_date,
+        COUNT(v.vehicle_no) AS assigned_count
         FROM hd_route r
         LEFT JOIN hd_vehicle v ON v.route_no = r.route_no
-        GROUP BY r.route_no, r.total_slots
+        GROUP BY r.route_no, r.total_slots, r.base_date
         ORDER BY r.route_no
     </select>
 
@@ -44,16 +45,29 @@
         VALUES (#{routeNo}, #{totalSlots})
     </insert>
 
-    <update id="updateTotalSlots">
+    <!-- 기준일은 새 값이 들어올 때만 바꾼다 (COALESCE: 앞의 값이 NULL 이면 뒤의 값) -->
+    <update id="update">
         UPDATE hd_route
         SET total_slots = #{totalSlots},
-            updated_at  = now()
+        base_date   = COALESCE(#{baseDate}, base_date),
+        updated_at  = now()
         WHERE route_no = #{routeNo}
     </update>
+
+    <delete id="deleteRotations">
+        DELETE FROM hd_route_rotation
+        WHERE route_no = #{routeNo}
+    </delete>
 
     <delete id="delete">
         DELETE FROM hd_route
         WHERE route_no = #{routeNo}
     </delete>
+
+    <select id="findTotalSlots" resultType="int">
+        SELECT total_slots
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+    </select>
 
 </mapper>

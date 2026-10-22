@@ -31,11 +31,20 @@ public class RouteService {
         return request.getRouteNo();
     }
 
-    /** 총 슬롯 수 변경. 이미 배정된 차량이 새 슬롯 수에 맞지 않으면 막는다 */
+    /**
+     * 총 슬롯 수·기준일 변경. 이미 배정된 차량이 새 슬롯 수에 맞지 않으면 막는다.
+     * 슬롯 수가 바뀌면 순번 고리 크기가 달라지므로 새 기준일이 반드시 필요하다
+     */
     @Transactional
     public void updateTotalSlots(String routeNo, RouteUpdateRequest request) {
         lockOrThrow(routeNo);
         int newTotal = request.getTotalSlots();
+
+        boolean slotsChanged = newTotal != routeMapper.findTotalSlots(routeNo);
+        if (slotsChanged && request.getBaseDate() == null) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST,
+                    "총 슬롯 수를 바꾸면 배차순위표의 새 기준일을 입력해 주세요.");
+        }
 
         int assigned = routeMapper.countVehicles(routeNo);
         if (newTotal < assigned) {
@@ -49,7 +58,7 @@ public class RouteService {
                     maxSlotNo + "번 슬롯을 사용 중인 차량이 있어 슬롯 수를 " + newTotal + "개로 줄일 수 없습니다.");
         }
 
-        routeMapper.updateTotalSlots(routeNo, newTotal);
+        routeMapper.update(routeNo, newTotal, request.getBaseDate());
     }
 
     @Transactional
@@ -60,6 +69,7 @@ public class RouteService {
             throw new BusinessException(HttpStatus.CONFLICT,
                     "차량이 배정된 노선은 삭제할 수 없습니다. 차량을 다른 노선으로 옮기거나 예비 차량으로 바꿔 주세요.");
         }
+        routeMapper.deleteRotations(routeNo);
         routeMapper.delete(routeNo);
     }
 

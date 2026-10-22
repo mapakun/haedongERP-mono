@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 /*
 노선 슬롯 변경 요청 inDTO
 */
@@ -16,4 +18,5 @@ public class RouteUpdateRequest {
     @Min(value = 1, message = "총 슬롯 수는 1 이상이어야 합니다.")
     @Max(value = 100, message = "총 슬롯 수는 100 이하로 입력해 주세요.")
     private Integer totalSlots;
+    private LocalDate baseDate;
 }

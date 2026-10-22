@@ -1,5 +1,6 @@
 package com.haedong.erp.domains.route;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +25,15 @@ public interface RouteMapper {
 
     void insert(@Param ("routeNo") String routeNo, @Param("totalSlots") int totalSlots);
 
-    void updateTotalSlots(@Param("routeNo") String routeNo, @Param("totalSlots") int totalSlots);
+    /** 총 슬롯 수 변경. baseDate 가 null 이면 기준일은 그대로 둔다 */
+    void update(@Param("routeNo") String routeNo,
+                @Param("totalSlots") int totalSlots,
+                @Param("baseDate") LocalDate baseDate);
 
     void delete(String routeNo);
+
+    /** 노선의 회전 값 이력 삭제 (FK 가 없으므로 노선 삭제 때 앱에서 함께 지운다) */
+    void deleteRotations(String routeNo);
+
+    int findTotalSlots(String routeNo);
 }

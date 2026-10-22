@@ -36,4 +36,24 @@
         ORDER BY route_no, effective_from
     </select>
 
+    <!-- RouteService·VehicleService 와 같은 hd_route 행을 잠근다 (순번 수 변경·삭제와 동시에 일어나지 않게) -->
+    <select id="lockRoute" resultType="com.haedong.erp.domains.dispatch.DispatchRoute">
+        SELECT route_no, total_slots, base_date
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+        FOR UPDATE
+    </select>
+
+    <select id="existsRotation" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM hd_route_rotation
+        WHERE route_no = #{routeNo} AND effective_from = #{effectiveFrom}
+        )
+    </select>
+
+    <insert id="insertRotation">
+        INSERT INTO hd_route_rotation (route_no, effective_from, daily_rotation, monthly_rotation, created_by)
+        VALUES (#{routeNo}, #{effectiveFrom}, #{dailyRotation}, #{monthlyRotation}, #{createdBy})
+    </insert>
+
 </mapper>

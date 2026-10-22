@@ -4,18 +4,19 @@ import com.haedong.erp.common.BusinessException;
 import com.haedong.erp.domains.dispatch.dto.DispatchAllResponse;
 import com.haedong.erp.domains.dispatch.dto.DispatchRow;
 import com.haedong.erp.domains.dispatch.dto.DispatchTableResponse;
+import com.haedong.erp.domains.dispatch.dto.RouteRotationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.haedong.erp.domains.auth.LoginUser;
+import com.haedong.erp.domains.dispatch.dto.RouteRotationRequest;
+import com.haedong.erp.domains.dispatch.dto.RouteRotationResponse;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -122,5 +123,38 @@ public class DispatchService {
             throw new BusinessException(HttpStatus.BAD_REQUEST, "조회할 연월이 올바르지 않습니다.");
         }
         return YearMonth.of(year, month);
+    }
+
+    /** 회전 값 이력 (최근 적용 시작일 순) */
+    @Transactional(readOnly = true)
+    public List<RouteRotationResponse> rotations(String routeNo) {
+        if (dispatchMapper.findRoutes(routeNo).isEmpty()) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, "노선을 찾을 수 없습니다.");
+        }
+        return dispatchMapper.findRotations(routeNo).stream()
+                .sorted(Comparator.comparing(RouteRotation::getEffectiveFrom).reversed())
+                .map(rotation -> new RouteRotationResponse(rotation.getEffectiveFrom(),
+                        rotation.getDailyRotation(), rotation.getMonthlyRotation(),
+                        rotation.getCreatedBy(), rotation.getCreatedAt()))
+                .toList();
+    }
+
+    /** 회전 값 등록. 덮어쓰지 않고 이력으로 추가한다 */
+    @Transactional
+    public void createRotation(String routeNo, RouteRotationRequest request, LoginUser currentUser) {
+        DispatchRoute route = dispatchMapper.lockRoute(routeNo)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "노선을 찾을 수 없습니다."));
+
+        if (route.getBaseDate() != null && request.effectiveFrom().isBefore(route.getBaseDate())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST,
+                    "적용 시작일은 기준일(" + route.getBaseDate() + ") 이후로 입력해 주세요.");
+        }
+        if (dispatchMapper.existsRotation(routeNo, request.effectiveFrom())) {
+            throw new BusinessException(HttpStatus.CONFLICT,
+                    request.effectiveFrom() + " 부터 적용되는 회전 값이 이미 있습니다.");
+        }
+
+        dispatchMapper.insertRotation(routeNo, request.effectiveFrom(),
+                request.dailyRotation(), request.monthlyRotation(), currentUser.getName());
     }
 }
