@@ -8,6 +8,7 @@ import { dutyRoutes } from '@/domains/duty/duty.routes'
 import { routeRoutes } from '@/domains/route/route.routes'
 import { vehicleRoutes } from '@/domains/vehicle/vehicle.routes'
 import { timetableRoutes } from '@/domains/timetable/timetable.routes'
+import { specialDutyRoutes } from '@/domains/specialduty/specialduty.routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,7 +16,7 @@ const router = createRouter({
     {
       path: '/',
       component: AppLayout,
-      children: [...mainRoutes, ...employeeRoutes, ...dutyRoutes, ...routeRoutes, ...vehicleRoutes, ...timetableRoutes],
+      children: [...mainRoutes, ...employeeRoutes, ...dutyRoutes, ...routeRoutes, ...vehicleRoutes, ...timetableRoutes, ...specialDutyRoutes],
     },
     ],
 })
