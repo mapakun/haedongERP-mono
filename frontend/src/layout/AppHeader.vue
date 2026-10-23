@@ -43,7 +43,9 @@ async function onLogout() {
           <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      <strong class="text-lg">해동 ERP</strong>
+      <RouterLink :to="{ name: 'main' }" class="text-lg font-bold hover:text-primary">
+        해동 운행관리
+      </RouterLink>
     </div>
 
     <!-- 사용자 메뉴 -->

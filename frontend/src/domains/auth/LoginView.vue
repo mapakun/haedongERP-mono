@@ -50,7 +50,7 @@ function checkCapsLock(event: KeyboardEvent) {
       class="flex w-full max-w-sm flex-col gap-4 rounded-lg bg-surface p-8 shadow-md"
       @submit.prevent="onSubmit"
     >
-      <h1 class="mb-2 text-center text-2xl font-bold">해동 ERP</h1>
+      <h1 class="mb-2 text-center text-2xl font-bold">해동 운행관리</h1>
 
       <label class="flex flex-col gap-1.5">
         아이디
