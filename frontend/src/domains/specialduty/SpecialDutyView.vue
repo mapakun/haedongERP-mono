@@ -3,6 +3,8 @@ import { onMounted, ref } from 'vue'
 import { getRoutes } from '@/domains/route/route.api'
 import type { RouteSummary } from '@/domains/route/route.types'
 import { getErrorMessage } from '@/shared/api/error'
+import NightSlotSection from './NightSlotSection.vue'
+import NightTripSection from './NightTripSection.vue'
 import ShiftSlotSection from './ShiftSlotSection.vue'
 
 const routes = ref<RouteSummary[]>([])
@@ -27,8 +29,13 @@ onMounted(async () => {
 
     <p v-if="errorMessage" class="text-danger">{{ errorMessage }}</p>
 
-    <template v-else>
-      <div class="mb-4 flex items-center gap-2">
+    <template v-else-if="routes.length > 0">
+      <!-- 전체 노선에 공통인 심야 기준 -->
+      <NightTripSection :routes="routes" />
+
+      <!-- 여기서부터는 노선을 골라서 본다 -->
+      <div class="mb-4 flex items-center gap-2 border-t border-line pt-6">
+        <span class="font-semibold">노선</span>
         <select v-model="routeNo" class="input w-auto">
           <option v-for="route in routes" :key="route.routeNo" :value="route.routeNo">
             {{ route.routeNo }}번
@@ -37,6 +44,7 @@ onMounted(async () => {
       </div>
 
       <ShiftSlotSection v-if="routeNo" :route-no="routeNo" />
+      <NightSlotSection v-if="routeNo" :route-no="routeNo" />
     </template>
   </section>
 </template>
