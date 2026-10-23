@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.specialduty.SpecialDutyMapper">
+
+    <!-- ========== 노선 ========== -->
+
+    <select id="findRouteTotalSlots" resultType="int">
+        SELECT total_slots
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+    </select>
+
+    <select id="lockRouteTotalSlots" resultType="int">
+        SELECT total_slots
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+        FOR UPDATE
+    </select>
+
+    <!-- ========== 단축 ========== -->
+
+    <!-- 1 ~ 총 슬롯 수의 모든 순번을 만들어서, 단축 켜짐 여부와 시간표에 있는지를 함께 본다.
+         토요일은 그 노선에 토요일 시간표가 있으면 그것을, 없으면 공휴일 시간표를 기준으로 한다 -->
+    <select id="findShiftSlots" resultType="com.haedong.erp.domains.specialduty.dto.ShiftSlotRow">
+        SELECT s.slot_no,
+               EXISTS (SELECT 1 FROM hd_shift_slot h
+                       WHERE h.route_no = #{routeNo} AND h.slot_no = s.slot_no) AS enabled,
+               EXISTS (SELECT 1 FROM hd_timetable t
+                       WHERE t.route_no = #{routeNo} AND t.day_type = 'WEEKDAY'
+                         AND t.slot_no = s.slot_no) AS in_weekday,
+               CASE WHEN EXISTS (SELECT 1 FROM hd_timetable t
+                                 WHERE t.route_no = #{routeNo} AND t.day_type = 'SATURDAY')
+                    THEN EXISTS (SELECT 1 FROM hd_timetable t
+                                 WHERE t.route_no = #{routeNo} AND t.day_type = 'SATURDAY'
+                                   AND t.slot_no = s.slot_no)
+                    ELSE EXISTS (SELECT 1 FROM hd_timetable t
+                                 WHERE t.route_no = #{routeNo} AND t.day_type = 'HOLIDAY'
+                                   AND t.slot_no = s.slot_no)
+               END AS in_saturday,
+               EXISTS (SELECT 1 FROM hd_timetable t
+                       WHERE t.route_no = #{routeNo} AND t.day_type = 'HOLIDAY'
+                         AND t.slot_no = s.slot_no) AS in_holiday,
+               (SELECT COUNT(*) FROM hd_timetable t
+                WHERE t.route_no = #{routeNo} AND t.day_type = 'WEEKDAY'
+                  AND t.slot_no = s.slot_no AND t.shift = 'MORNING') AS weekday_am_trips
+        FROM generate_series(1, (SELECT total_slots FROM hd_route WHERE route_no = #{routeNo})) AS s (slot_no)
+        ORDER BY s.slot_no
+    </select>
+
+    <delete id="deleteShiftSlots">
+        DELETE FROM hd_shift_slot
+        WHERE route_no = #{routeNo}
+    </delete>
+
+    <insert id="insertShiftSlot">
+        INSERT INTO hd_shift_slot (route_no, slot_no)
+        VALUES (#{routeNo}, #{slotNo})
+    </insert>
+
+    <!-- ========== 심야 시간표 ========== -->
+
+    <select id="findNightTrips" resultType="com.haedong.erp.domains.specialduty.dto.NightTripRow">
+        SELECT night_no, depart_min
+        FROM hd_night_trip
+        ORDER BY night_no
+    </select>
+
+    <update id="updateNightTrip">
+        UPDATE hd_night_trip
+        SET depart_min = #{departMin},
+            updated_at = now()
+        WHERE night_no = #{nightNo}
+    </update>
+
+    <!-- ========== 노선별 최소 휴식 ========== -->
+
+    <select id="findNightRules" resultType="com.haedong.erp.domains.specialduty.dto.NightRuleRow">
+        SELECT route_no, min_rest_min
+        FROM hd_night_rule
+        ORDER BY route_no
+    </select>
+
+    <select id="findMinRestMin" resultType="int">
+        SELECT min_rest_min
+        FROM hd_night_rule
+        WHERE route_no = #{routeNo}
+    </select>
+
+    <!-- 기준이 없는 노선(새로 만든 노선)도 저장할 수 있도록 있으면 고치고 없으면 만든다 -->
+    <insert id="upsertNightRule">
+        INSERT INTO hd_night_rule (route_no, min_rest_min)
+        VALUES (#{routeNo}, #{minRestMin})
+        ON CONFLICT (route_no)
+        DO UPDATE SET min_rest_min = EXCLUDED.min_rest_min,
+                      updated_at   = now()
+    </insert>
+
+    <!-- ========== 심야 가능 순번 ========== -->
+
+    <select id="findDayTypes" resultType="com.haedong.erp.domains.timetable.DayType">
+        SELECT day_type
+        FROM (SELECT DISTINCT day_type FROM hd_timetable WHERE route_no = #{routeNo}) d
+        ORDER BY CASE day_type
+                     WHEN 'WEEKDAY'  THEN 1
+                     WHEN 'SATURDAY' THEN 2
+                     WHEN 'HOLIDAY'  THEN 3
+                     WHEN 'VACATION' THEN 4
+                 END
+    </select>
+
+    <!-- 순번의 마지막 도착 = 그 순번 회차들의 도착 시각 중 가장 늦은 것 -->
+    <select id="findTimetableSlots" resultType="com.haedong.erp.domains.specialduty.dto.NightSlotRow">
+        SELECT slot_no, MAX(arrive_min) AS last_arrive_min
+        FROM hd_timetable
+        WHERE route_no = #{routeNo} AND day_type = #{dayType}
+        GROUP BY slot_no
+        ORDER BY slot_no
+    </select>
+
+    <select id="findNightPicks" resultType="com.haedong.erp.domains.specialduty.dto.NightPick">
+        SELECT slot_no, night_no
+        FROM hd_night_slot
+        WHERE route_no = #{routeNo} AND day_type = #{dayType}
+        ORDER BY slot_no, night_no
+    </select>
+
+    <delete id="deleteNightPicks">
+        DELETE FROM hd_night_slot
+        WHERE route_no = #{routeNo} AND day_type = #{dayType}
+    </delete>
+
+    <insert id="insertNightPick">
+        INSERT INTO hd_night_slot (route_no, day_type, slot_no, night_no)
+        VALUES (#{routeNo}, #{dayType}, #{slotNo}, #{nightNo})
+    </insert>
+
+</mapper>
