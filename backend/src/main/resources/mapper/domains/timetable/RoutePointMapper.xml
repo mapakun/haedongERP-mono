@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.timetable.RoutePointMapper">
+
+    <!-- 글자 순서(MID1, MID2, START...)가 아니라 노선을 따라가는 순서로 정렬한다 -->
+    <select id="findByRouteNo" resultType="com.haedong.erp.domains.timetable.dto.RoutePointResponse">
+        SELECT point_key, name
+        FROM hd_route_point
+        WHERE route_no = #{routeNo}
+        ORDER BY CASE point_key
+                     WHEN 'START' THEN 1
+                     WHEN 'MID1'  THEN 2
+                     WHEN 'MID2'  THEN 3
+                     WHEN 'TURN'  THEN 4
+                     WHEN 'MID3'  THEN 5
+                     WHEN 'MID4'  THEN 6
+                     WHEN 'END'   THEN 7
+                 END
+    </select>
+
+    <select id="lockRoute" resultType="string">
+        SELECT route_no
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+        FOR UPDATE
+    </select>
+
+    <delete id="deleteByRouteNo">
+        DELETE FROM hd_route_point
+        WHERE route_no = #{routeNo}
+    </delete>
+
+    <insert id="insert">
+        INSERT INTO hd_route_point (route_no, point_key, name)
+        VALUES (#{routeNo}, #{pointKey}, #{name})
+    </insert>
+
+</mapper>
