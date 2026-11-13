@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.haedong.erp.domains.comfortleave.dto.ComfortContractRow;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -61,6 +62,10 @@ public class ComfortLeaveController {
     }
 
     // ===== 촉탁 계약 =====
+    @GetMapping("/members/{employeeId}/contracts")
+    public List<ComfortContractRow> findContracts(@PathVariable Long employeeId) {
+        return comfortLeaveService.findContractsOf(employeeId);
+    }
 
     @PostMapping("/members/{employeeId}/contracts")
     @ResponseStatus(HttpStatus.CREATED)

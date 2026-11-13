@@ -70,7 +70,9 @@ public class ComfortLeaveService {
                 continue; // 그해가 시작되기 전에 퇴사한 사람
             }
             List<ComfortUseRow> uses = usesBetween(usesByEmployee, member.getEmployeeId(), yearStart, yearEnd);
-            int granted = member.getHireDate().isBefore(yearStart) ? REGULAR_GRANT : 0; // 입사한 해는 0
+            // 입사한 해는 0. 입사일자를 모르면 이미 근무 중인 것으로 보고 4개
+            boolean hiredBeforeYear = member.getHireDate() == null || member.getHireDate().isBefore(yearStart);
+            int granted = hiredBeforeYear ? REGULAR_GRANT : 0;
             regulars.add(new RegularLeaveRow(member.getEmployeeId(), member.getName(), member.getHireDate(),
                     member.getRetiredAt(), granted, uses.size(), granted - uses.size(), uses));
         }
@@ -179,6 +181,10 @@ public class ComfortLeaveService {
     }
 
     // ===================== 촉탁 계약 =====================
+    @Transactional(readOnly = true)
+    public List<ComfortContractRow> findContractsOf(Long employeeId) {
+        return comfortLeaveMapper.findContractsOf(employeeId);
+    }
 
     /** 만료일을 비우면 시작일 + 1년 - 1일. 같은 사람의 계약끼리 기간이 겹치면 안 된다 */
     @Transactional
