@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.missedtrip.MissedTripMapper">
+
+    <!-- 목록·합계·내보내기가 같은 조건을 쓰도록 한 곳에 둔다 -->
+    <sql id="searchCondition">
+        <where>
+            <if test="fromDate != null">
+                AND missed_on &gt;= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND missed_on &lt;= #{toDate}
+            </if>
+            <if test="routeNo != null">
+                AND route_no = #{routeNo}
+            </if>
+            <if test="reason != null">
+                AND reason = #{reason}
+            </if>
+            <!-- 승무원·차량번호·비고에서 찾는다. 비고는 대소문자를 가리지 않는다 (MCU, mcu) -->
+            <if test="keyword != null">
+                AND (driver_name LIKE '%' || #{keyword} || '%'
+                     OR vehicle_no LIKE '%' || #{keyword} || '%'
+                     OR note ILIKE '%' || #{keyword} || '%')
+            </if>
+        </where>
+    </sql>
+
+    <sql id="rowColumns">
+        id, missed_on, route_no, vehicle_no, trip_label, driver_name, missed_count, reason, note, created_by
+    </sql>
+
+    <select id="search" resultType="com.haedong.erp.domains.missedtrip.dto.MissedTripRow">
+        SELECT <include refid="rowColumns"/>
+        FROM hd_missed_trip
+        <include refid="searchCondition"/>
+        ORDER BY missed_on DESC, id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="summarize" resultType="com.haedong.erp.domains.missedtrip.dto.MissedTripSummary">
+        SELECT COUNT(*) AS total_count,
+               COALESCE(SUM(missed_count), 0) AS missed_sum
+        FROM hd_missed_trip
+        <include refid="searchCondition"/>
+    </select>
+
+    <!-- 엑셀에는 오래된 일자부터 위에 오도록 오름차순으로 뽑는다 -->
+    <select id="findForExport" resultType="com.haedong.erp.domains.missedtrip.dto.MissedTripRow">
+        SELECT <include refid="rowColumns"/>
+        FROM hd_missed_trip
+        <include refid="searchCondition"/>
+        ORDER BY missed_on, id
+    </select>
+
+    <select id="existsRoute" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM hd_route WHERE route_no = #{routeNo})
+    </select>
+
+    <insert id="insert">
+        INSERT INTO hd_missed_trip
+            (missed_on, route_no, vehicle_no, trip_label, driver_name, missed_count, reason, note, created_by)
+        VALUES (#{v.missedOn}, #{v.routeNo}, #{v.vehicleNo}, #{v.tripLabel}, #{v.driverName},
+                #{v.missedCount}, #{v.reason}, #{v.note}, #{createdBy})
+    </insert>
+
+    <update id="update">
+        UPDATE hd_missed_trip
+        SET missed_on    = #{v.missedOn},
+            route_no     = #{v.routeNo},
+            vehicle_no   = #{v.vehicleNo},
+            trip_label   = #{v.tripLabel},
+            driver_name  = #{v.driverName},
+            missed_count = #{v.missedCount},
+            reason       = #{v.reason},
+            note         = #{v.note},
+            updated_at   = now()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM hd_missed_trip
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

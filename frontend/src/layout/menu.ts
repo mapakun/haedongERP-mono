@@ -13,4 +13,5 @@ export const menuItems: MenuItem[] = [
   { label: '시간표', routeName: 'timetable-list' },
   { label: '단축·심야', routeName: 'special-duty' },
   { label: '위로휴가', routeName: 'comfort-leave' },
+  { label: '결행 관리', routeName: 'missed-trip-list' },
 ]
