@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.comfortleave.ComfortLeaveMapper">
+
+    <!-- ========== 현황 조회 ========== -->
+
+    <select id="findMembers" resultType="com.haedong.erp.domains.comfortleave.dto.ComfortMemberRow">
+        SELECT m.employee_id, e.name, m.employment_type, m.hire_date, e.retired_at, m.note
+        FROM hd_comfort_member m
+        JOIN hd_employee e ON e.id = m.employee_id
+        WHERE e.job_type = 'DRIVER'
+        ORDER BY e.name
+    </select>
+
+    <select id="findContracts" resultType="com.haedong.erp.domains.comfortleave.dto.ComfortContractRow">
+        SELECT employee_id, start_date, end_date
+        FROM hd_comfort_contract
+        ORDER BY start_date, employee_id
+    </select>
+
+    <select id="findUsesBetween" resultType="com.haedong.erp.domains.comfortleave.dto.ComfortUseRow">
+        SELECT id, employee_id, used_on, memo, created_by
+        FROM hd_comfort_use
+        WHERE used_on BETWEEN #{from} AND #{to}
+        ORDER BY used_on, id
+    </select>
+
+    <!-- ========== 대상자 관리 ========== -->
+
+    <!-- 아직 대상자로 등록되지 않은 기사가 위에 오도록 정렬한다 (새 입사자를 바로 등록하기 위해) -->
+    <select id="findDriverMembers" resultType="com.haedong.erp.domains.comfortleave.dto.DriverMemberRow">
+        SELECT e.id AS employee_id, e.name, e.retired_at, m.employment_type, m.hire_date, m.note
+        FROM hd_employee e
+        LEFT JOIN hd_comfort_member m ON m.employee_id = e.id
+        WHERE e.job_type = 'DRIVER'
+        ORDER BY (m.employee_id IS NULL) DESC, e.name
+    </select>
+
+    <select id="lockDriverName" resultType="string">
+        SELECT name
+        FROM hd_employee
+        WHERE id = #{employeeId} AND job_type = 'DRIVER'
+        FOR UPDATE
+    </select>
+
+    <select id="lockMemberType" resultType="com.haedong.erp.domains.comfortleave.EmploymentType">
+        SELECT employment_type
+        FROM hd_comfort_member
+        WHERE employee_id = #{employeeId}
+        FOR UPDATE
+    </select>
+
+    <!-- 처음이면 만들고, 이미 있으면 고친다 -->
+    <insert id="upsertMember">
+        INSERT INTO hd_comfort_member (employee_id, employment_type, hire_date, note)
+        VALUES (#{employeeId}, #{employmentType}, #{hireDate}, #{note})
+        ON CONFLICT (employee_id)
+        DO UPDATE SET employment_type = EXCLUDED.employment_type,
+                      hire_date       = EXCLUDED.hire_date,
+                      note            = EXCLUDED.note,
+                      updated_at      = now()
+    </insert>
+
+    <!-- ========== 사용 기록 ========== -->
+
+    <insert id="insertUse">
+        INSERT INTO hd_comfort_use (employee_id, used_on, memo, created_by)
+        VALUES (#{employeeId}, #{usedOn}, #{memo}, #{createdBy})
+    </insert>
+
+    <delete id="deleteUse">
+        DELETE FROM hd_comfort_use
+        WHERE id = #{id}
+    </delete>
+
+    <select id="countUsesBetween" resultType="int">
+        SELECT COUNT(*)
+        FROM hd_comfort_use
+        WHERE employee_id = #{employeeId}
+          AND used_on BETWEEN #{from} AND #{to}
+    </select>
+
+    <!-- ========== 촉탁 계약 ========== -->
+
+    <select id="findContractsOf" resultType="com.haedong.erp.domains.comfortleave.dto.ComfortContractRow">
+        SELECT employee_id, start_date, end_date
+        FROM hd_comfort_contract
+        WHERE employee_id = #{employeeId}
+        ORDER BY start_date
+    </select>
+
+    <insert id="insertContract">
+        INSERT INTO hd_comfort_contract (employee_id, start_date, end_date)
+        VALUES (#{employeeId}, #{startDate}, #{endDate})
+    </insert>
+
+    <delete id="deleteContract">
+        DELETE FROM hd_comfort_contract
+        WHERE employee_id = #{employeeId} AND start_date = #{startDate}
+    </delete>
+
+</mapper>

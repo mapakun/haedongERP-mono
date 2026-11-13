@@ -52,6 +52,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/timetables/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/timetables/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/route-points/**").hasRole("ADMIN")
+                        // 위로휴가: 조회는 로그인한 누구나, 사용 기록·대상자·계약 변경은 관리자 이상
+                        .requestMatchers(HttpMethod.POST, "/api/comfort-leave/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/comfort-leave/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/comfort-leave/**").hasRole("ADMIN")
                         // 근무표: 지금은 관리자 이상만 (기사 본인 조회는 3단계에서 따로 연다)
                         .requestMatchers("/api/duty/**").hasRole("ADMIN")
                         // 단축·심야: 조회는 로그인한 누구나, 저장은 관리자 이상
