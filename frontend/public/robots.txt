@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /$
+Allow: /login
+Disallow: /api/
+
+Sitemap: https://haedong.xyz/sitemap.xml
