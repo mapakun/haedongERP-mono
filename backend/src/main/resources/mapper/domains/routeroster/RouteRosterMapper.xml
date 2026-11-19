@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.haedong.erp.domains.routeroster.RouteRosterMapper">
+
+    <!-- ========== 노선 ========== -->
+
+    <select id="existsRoute" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM hd_route WHERE route_no = #{routeNo})
+    </select>
+
+    <select id="lockRoute" resultType="string">
+        SELECT route_no
+        FROM hd_route
+        WHERE route_no = #{routeNo}
+        FOR UPDATE
+    </select>
+
+    <!-- ========== 배치 ========== -->
+
+    <select id="findLines" resultType="com.haedong.erp.domains.routeroster.RouteRosterLine">
+        SELECT sort_order, slot_no, vehicle_no, ab_label, employee_name
+        FROM hd_route_roster
+        WHERE roster_month = #{rosterMonth}
+          AND route_no = #{routeNo}
+        ORDER BY sort_order
+    </select>
+
+    <select id="findOtherAssignments" resultType="com.haedong.erp.domains.routeroster.dto.RouteRosterAssignment">
+        SELECT employee_name, route_no
+        FROM hd_route_roster
+        WHERE roster_month = #{rosterMonth}
+          AND route_no &lt;&gt; #{routeNo}
+          AND employee_name IS NOT NULL
+        ORDER BY route_no, sort_order
+    </select>
+
+    <select id="countLines" resultType="int">
+        SELECT COUNT(*)
+        FROM hd_route_roster
+        WHERE roster_month = #{rosterMonth}
+          AND route_no = #{routeNo}
+    </select>
+
+    <delete id="deleteLines">
+        DELETE FROM hd_route_roster
+        WHERE roster_month = #{rosterMonth}
+          AND route_no = #{routeNo}
+    </delete>
+
+    <!-- 여러 줄을 INSERT 한 번으로 넣는다 -->
+    <insert id="insertLines">
+        INSERT INTO hd_route_roster
+            (roster_month, route_no, sort_order, slot_no, vehicle_no, ab_label, employee_name, created_by)
+        VALUES
+        <foreach collection="lines" item="line" separator=",">
+            (#{rosterMonth}, #{routeNo}, #{line.sortOrder}, #{line.slotNo}, #{line.vehicleNo},
+             #{line.abLabel}, #{line.employeeName}, #{createdBy})
+        </foreach>
+    </insert>
+
+    <!-- ========== 차량 관리에서 가져오기 ========== -->
+
+    <!-- 순번이 없는 차량은 뒤로. sort_order 는 서비스에서 다시 매긴다 -->
+    <select id="findVehicles" resultType="com.haedong.erp.domains.routeroster.RouteRosterLine">
+        SELECT 0 AS sort_order, slot_no, vehicle_no, NULL AS ab_label, NULL AS employee_name
+        FROM hd_vehicle
+        WHERE route_no = #{routeNo}
+        ORDER BY slot_no NULLS LAST, vehicle_no
+    </select>
+
+    <!-- ========== 이름 변경 ========== -->
+
+    <update id="renameEmployee">
+        UPDATE hd_route_roster
+        SET employee_name = #{newName},
+            updated_at    = now()
+        WHERE employee_name = #{oldName}
+    </update>
+
+</mapper>

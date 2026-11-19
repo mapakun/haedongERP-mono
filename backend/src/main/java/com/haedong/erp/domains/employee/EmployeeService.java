@@ -10,6 +10,7 @@ import com.haedong.erp.domains.employee.dto.EmployeeRetireRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSaveRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSearchRequest;
 import com.haedong.erp.domains.employee.dto.EmployeeSummaryResponse;
+import com.haedong.erp.domains.routeroster.RouteRosterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class EmployeeService {
 
     private final EmployeeMapper employeeMapper;
     private final DutyService dutyService;
+    private final RouteRosterService routeRosterService;
 
     @Transactional(readOnly = true)
     public PageResponse<EmployeeSummaryResponse> search(EmployeeSearchRequest request) {
@@ -73,6 +75,7 @@ public class EmployeeService {
         if (!oldName.equals(employee.getName())) {
             employeeMapper.renameDriver(oldName, employee.getName());
             dutyService.renameEmployee(oldName, employee.getName());
+            routeRosterService.renameEmployee(oldName, employee.getName());
         }
         saveDriverInfo(employee.getName(), request);
     }

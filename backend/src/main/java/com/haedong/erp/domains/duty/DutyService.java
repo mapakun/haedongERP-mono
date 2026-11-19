@@ -50,6 +50,36 @@ public class DutyService {
         return new DutyRosterResponse(year, month, yearMonth.lengthOfMonth(), rows);
     }
 
+    /**
+     * 여러 기사의 한 달 근무 칸 (노선 근무표에서 사용). 계산 방식은 월 근무표와 같다.
+     * 시작점이 없는 기사는 모든 칸이 미설정(shift = null)
+     */
+    @Transactional(readOnly = true)
+    public Map<String, List<DutyCell>> monthCells(Collection<String> employeeNames, YearMonth yearMonth) {
+        LocalDate from = yearMonth.atDay(1);
+        LocalDate to = yearMonth.atEndOfMonth();
+        Set<String> names = new HashSet<>(employeeNames);
+        if (names.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<String, List<DutyStart>> startsByName = dutyMapper.findStartsUntil(to).stream()
+                .filter(start -> names.contains(start.getEmployeeName()))
+                .collect(Collectors.groupingBy(DutyStart::getEmployeeName));
+        Map<String, Map<LocalDate, Shift>> overridesByName = dutyMapper.findOverrides(from, to).stream()
+                .filter(override -> names.contains(override.getEmployeeName()))
+                .collect(Collectors.groupingBy(DutyOverride::getEmployeeName,
+                        Collectors.toMap(DutyOverride::getWorkDate, DutyOverride::getShift)));
+
+        Map<String, List<DutyCell>> result = new HashMap<>();
+        for (String name : names) {
+            result.put(name, cells(from, to,
+                    startsByName.getOrDefault(name, List.of()),
+                    overridesByName.getOrDefault(name, Map.of())));
+        }
+        return result;
+    }
+
     /** 한 기사의 시작점 이력과 각 시작점의 적용 기간 (최근 입력 순) */
     @Transactional(readOnly = true)
     public List<DutyStartHistoryResponse> startHistory(String employeeName) {
