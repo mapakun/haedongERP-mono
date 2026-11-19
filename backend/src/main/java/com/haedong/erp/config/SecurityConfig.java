@@ -56,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/comfort-leave/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/comfort-leave/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/comfort-leave/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/missed-trips/stats").hasRole("ADMIN")
                         // 결행: 목록 조회는 로그인한 누구나, 입력·수정·삭제와 엑셀 내보내기는 관리자 이상
                         .requestMatchers(HttpMethod.GET, "/api/missed-trips/export").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/missed-trips/**").hasRole("ADMIN")

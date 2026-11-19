@@ -15,6 +15,7 @@ import {
   type MissedTrip,
   type MissedTripPage,
 } from './missedtrip.types'
+import MissedTripStatsPanel from './MissedTripStatsPanel.vue'
 
 const auth = useAuthStore()
 
@@ -47,6 +48,7 @@ const errorMessage = ref('')
 const formOpen = ref(false)
 const editing = ref<MissedTrip | null>(null)
 const exportOpen = ref(false)
+const tab = ref<'list' | 'stats'>('list')
 
 // 빠르게 조회를 연달아 눌렀을 때 늦게 도착한 옛 응답이 화면을 덮지 않도록 순번을 센다
 let requestSeq = 0
@@ -141,6 +143,27 @@ onMounted(async () => {
       </div>
     </div>
 
+        <div v-if="auth.isAdmin" class="mb-4 flex gap-1 border-b border-line">
+      <button
+        type="button"
+        :class="['px-4 py-2', tab === 'list' ? 'border-b-2 border-primary font-semibold' : 'text-muted']"
+        @click="tab = 'list'"
+      >
+        목록
+      </button>
+      <button
+        type="button"
+        :class="['px-4 py-2', tab === 'stats' ? 'border-b-2 border-primary font-semibold' : 'text-muted']"
+        @click="tab = 'stats'"
+      >
+        통계
+      </button>
+    </div>
+
+    <MissedTripStatsPanel v-if="auth.isAdmin && tab === 'stats'" :route-nos="routeNos" />
+
+    <div v-show="tab === 'list'">
+
     <form class="mb-4 flex flex-wrap items-center gap-2" @submit.prevent="onSearch">
       <input v-model="condition.fromDate" type="date" class="input w-auto" aria-label="시작일" />
       <span>~</span>
@@ -228,6 +251,8 @@ onMounted(async () => {
         @change="load"
       />
     </template>
+
+  </div>
 
     <template v-if="auth.isAdmin">
       <MissedTripFormModal

@@ -55,6 +55,71 @@
         ORDER BY missed_on, id
     </select>
 
+    <!-- 통계 조건: 기간은 필수라 항상 WHERE 가 있다 -->
+    <sql id="statsCondition">
+        WHERE missed_on &gt;= #{fromDate} AND missed_on &lt;= #{toDate}
+        <if test="routeNo != null">
+            AND route_no = #{routeNo}
+        </if>
+        <if test="reason != null">
+            AND reason = #{reason}
+        </if>
+    </sql>
+
+    <select id="statByGroup" resultType="com.haedong.erp.domains.missedtrip.dto.MissedTripStatRow">
+        SELECT
+        <choose>
+            <when test="group.name() == 'REASON'">reason</when>
+            <when test="group.name() == 'ROUTE'">route_no</when>
+            <when test="group.name() == 'MONTH'">to_char(missed_on, 'YYYY-MM')</when>
+            <when test="group.name() == 'VEHICLE'">vehicle_no</when>
+            <otherwise>driver_name</otherwise>
+        </choose>
+        AS label,
+        COUNT(*) AS trip_count,
+        COALESCE(SUM(missed_count), 0) AS missed_sum
+        FROM hd_missed_trip
+        <include refid="statsCondition"/>
+        GROUP BY 1
+        <choose>
+            <when test="group.name() == 'MONTH'">ORDER BY 1</when>
+            <otherwise>ORDER BY missed_sum DESC, trip_count DESC, 1</otherwise>
+        </choose>
+        <if test="group.name() == 'VEHICLE' or group.name() == 'DRIVER'">
+            LIMIT 20
+        </if>
+    </select>
+
+    <!-- 단어마다 한 줄. 단어가 비고에 들어 있으면(대소문자 무시) 그 기록을 센다 -->
+    <select id="statByKeyword" resultType="com.haedong.erp.domains.missedtrip.dto.MissedTripStatRow">
+        SELECT k.word AS label,
+               COUNT(m.id) AS trip_count,
+               COALESCE(SUM(m.missed_count), 0) AS missed_sum
+        FROM (VALUES
+        <foreach collection="keywordList" item="word" separator=",">
+            (#{word})
+        </foreach>
+        ) AS k(word)
+        LEFT JOIN hd_missed_trip m
+               ON position(lower(k.word) in lower(coalesce(m.note, ''))) &gt; 0
+              AND m.missed_on &gt;= #{fromDate} AND m.missed_on &lt;= #{toDate}
+        <if test="routeNo != null">
+              AND m.route_no = #{routeNo}
+        </if>
+        <if test="reason != null">
+              AND m.reason = #{reason}
+        </if>
+        GROUP BY k.word
+        ORDER BY missed_sum DESC, k.word
+    </select>
+
+    <select id="statTotal" resultType="com.haedong.erp.domains.missedtrip.dto.MissedTripSummary">
+        SELECT COUNT(*) AS total_count,
+               COALESCE(SUM(missed_count), 0) AS missed_sum
+        FROM hd_missed_trip
+        <include refid="statsCondition"/>
+    </select>
+
     <select id="existsRoute" resultType="boolean">
         SELECT EXISTS (SELECT 1 FROM hd_route WHERE route_no = #{routeNo})
     </select>

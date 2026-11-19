@@ -59,3 +59,38 @@ export interface MissedTripSaveRequest {
   reason: MissedReason
   note: string | null
 }
+
+/** 통계를 무엇을 기준으로 묶을지 (백엔드 MissedTripStatGroup) */
+export type StatGroup = 'REASON' | 'ROUTE' | 'MONTH' | 'VEHICLE' | 'DRIVER' | 'KEYWORD'
+
+export const statGroupOptions: { value: StatGroup; label: string }[] = [
+  { value: 'REASON', label: '사유별' },
+  { value: 'ROUTE', label: '노선별' },
+  { value: 'MONTH', label: '월별' },
+  { value: 'VEHICLE', label: '차량별 (상위 20)' },
+  { value: 'DRIVER', label: '승무원별 (상위 20)' },
+  { value: 'KEYWORD', label: '비고 단어별' },
+]
+
+export interface MissedTripStatParams {
+  fromDate: string
+  toDate: string
+  group: StatGroup
+  routeNo?: string
+  reason?: MissedReason
+  /** 비고 단어별일 때 쉼표로 구분한 단어들 */
+  keywords?: string
+}
+
+/** 통계 한 줄 (백엔드 MissedTripStatRow) */
+export interface MissedTripStatRow {
+  label: string | null
+  tripCount: number
+  missedSum: number
+}
+
+export interface MissedTripStatResponse {
+  rows: MissedTripStatRow[]
+  totalCount: number
+  missedSum: number
+}

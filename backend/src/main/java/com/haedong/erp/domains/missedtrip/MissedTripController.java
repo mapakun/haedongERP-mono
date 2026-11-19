@@ -4,6 +4,8 @@ import com.haedong.erp.domains.auth.LoginUser;
 import com.haedong.erp.domains.missedtrip.dto.MissedTripPageResponse;
 import com.haedong.erp.domains.missedtrip.dto.MissedTripSaveRequest;
 import com.haedong.erp.domains.missedtrip.dto.MissedTripSearchRequest;
+import com.haedong.erp.domains.missedtrip.dto.MissedTripStatRequest;
+import com.haedong.erp.domains.missedtrip.dto.MissedTripStatResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
@@ -48,6 +50,12 @@ public class MissedTripController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         missedTripService.delete(id);
+    }
+
+    /** 통계 (관리자만, SecurityConfig 에서 막는다) */
+    @GetMapping("/stats")
+    public MissedTripStatResponse stats(MissedTripStatRequest request) {
+        return missedTripService.stats(request);
     }
 
     /** 엑셀 내보내기. 기간 필수, 관리자만 (SecurityConfig 에서 막는다) */

@@ -4,6 +4,8 @@ import com.haedong.erp.domains.missedtrip.dto.MissedTripRow;
 import com.haedong.erp.domains.missedtrip.dto.MissedTripSaveRequest;
 import com.haedong.erp.domains.missedtrip.dto.MissedTripSearchRequest;
 import com.haedong.erp.domains.missedtrip.dto.MissedTripSummary;
+import com.haedong.erp.domains.missedtrip.dto.MissedTripStatRequest;
+import com.haedong.erp.domains.missedtrip.dto.MissedTripStatRow;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -20,6 +22,15 @@ public interface MissedTripMapper {
 
     /** 내보내기용: 페이지 없이 조건에 맞는 전부 (호출하기 전에 건수 제한을 확인한다) */
     List<MissedTripRow> findForExport(MissedTripSearchRequest request);
+
+    /** 사유·노선·월·차량·승무원 기준 통계 */
+    List<MissedTripStatRow> statByGroup(MissedTripStatRequest request);
+
+    /** 비고에 들어간 단어별 통계 */
+    List<MissedTripStatRow> statByKeyword(MissedTripStatRequest request);
+
+    /** 통계 조건 전체의 건수·합계 */
+    MissedTripSummary statTotal(MissedTripStatRequest request);
 
     boolean existsRoute(String routeNo);
 

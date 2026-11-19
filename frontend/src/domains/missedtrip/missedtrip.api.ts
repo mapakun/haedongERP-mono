@@ -1,5 +1,9 @@
 import { http } from '@/shared/api/http'
-import type { MissedTripPage, MissedTripSaveRequest, MissedTripSearchParams } from './missedtrip.types'
+import type { MissedTripPage,
+  MissedTripSaveRequest,
+  MissedTripSearchParams,
+  MissedTripStatParams,
+  MissedTripStatResponse, } from './missedtrip.types'
 
 const BASE = '/missed-trips'
 
@@ -30,4 +34,9 @@ export async function downloadMissedTripExcel(params: MissedTripSearchParams): P
   link.download = `결행목록_${params.fromDate}_${params.toDate}.xlsx`
   link.click()
   URL.revokeObjectURL(url)
+}
+
+export async function getMissedTripStats(params: MissedTripStatParams): Promise<MissedTripStatResponse> {
+  const { data } = await http.get<MissedTripStatResponse>(`${BASE}/stats`, { params })
+  return data
 }
